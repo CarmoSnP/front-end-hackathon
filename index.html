@@ -129,6 +129,11 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
+        
+        .upload-area.file-selected {
+            border-color: var(--success-color);
+            background-color: #f0fff4;
+        }
 
         .upload-area:hover {
             border-color: var(--primary-color);
@@ -149,6 +154,7 @@
             margin-bottom: 20px;
             resize: vertical;
             font-size: 16px;
+            display: none; /* Oculta a área de texto por padrão */
         }
 
         .options-bar {
@@ -208,6 +214,12 @@
         .criteria-item:last-child {
             border-bottom: none;
         }
+        
+        .criteria-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
         .criteria-name {
             font-weight: bold;
@@ -221,21 +233,23 @@
             color: white;
             border-radius: 3px;
             font-size: 14px;
-            margin-left: 10px;
         }
 
         .criteria-comment {
             margin-top: 8px;
             font-size: 14px;
             color: #555;
+            white-space: pre-wrap; /* Preserva quebras de linha no feedback */
         }
 
         .total-score {
             margin-top: 20px;
             padding-top: 15px;
-            border-top: 2px solid var(--border-color);
-            font-size: 18px;
+            border-top: 2px solid var(--primary-color);
+            font-size: 22px;
             font-weight: bold;
+            color: var(--primary-color);
+            text-align: center;
         }
 
         /* Painel Direito - Configurações */
@@ -295,6 +309,7 @@
             color: var(--error-color);
             padding: 10px;
             background-color: #f8d7da;
+            border: 1px solid var(--error-color);
             border-radius: 5px;
             margin-bottom: 15px;
             display: none;
@@ -345,21 +360,18 @@
 
 <body>
     <div class="container">
-        <!-- Painel Esquerdo - Lista de Redações -->
         <div class="left-panel">
             <h2>Minhas Redações</h2>
             <div class="redacoes-container" id="redacoes-list">
-                <!-- As redações serão adicionadas dinamicamente aqui -->
-            </div>
+                </div>
         </div>
 
-        <!-- Painel Central - Chat e Correção -->
         <div class="center-panel">
             <div class="upload-area" id="upload-area">
-                <i>📄</i>
-                <h3>Fazer upload de uma redação</h3>
-                <p>Arraste um arquivo aqui ou clique para selecionar</p>
-                <input type="file" id="file-input" accept=".txt,.pdf,.doc,.docx" style="display: none;">
+                <i id="upload-icon">📄</i>
+                <h3 id="upload-title">Fazer upload de uma redação</h3>
+                <p id="upload-text">Arraste um arquivo de imagem aqui ou clique para selecionar</p>
+                <input type="file" id="file-input" accept="image/*" style="display: none;">
             </div>
 
             <textarea class="text-input" id="text-input" placeholder="Ou digite sua redação aqui..."></textarea>
@@ -367,14 +379,13 @@
             <div class="options-bar">
                 <select class="model-select" id="model-select">
                     <option value="enem">Redação ENEM</option>
-                    <option value="outros">Outros Modelos</option>
                 </select>
                 <button class="submit-btn" id="submit-btn">Enviar para Correção</button>
             </div>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Processando sua redação...</p>
+                <p>Corrigindo sua redação... Isso pode levar alguns segundos.</p>
             </div>
 
             <div class="error-message" id="error-message"></div>
@@ -390,39 +401,11 @@
             </div>
         </div>
 
-        <!-- Painel Direito - Configurações -->
         <div class="right-panel">
             <h2>Configurações</h2>
-            <div class="config-option">
-                <label for="tipo-redacao">Tipo de Redação:</label>
-                <select id="tipo-redacao">
-                    <option value="enem">ENEM</option>
-                    <option value="vestibular">Vestibular</option>
-                    <option value="concursos">Concursos</option>
-                </select>
-            </div>
-            <div class="config-option">
-                <label for="nivel-detalhe">Nível de Detalhe:</label>
-                <select id="nivel-detalhe">
-                    <option value="basico">Básico</option>
-                    <option value="detalhado" selected>Detalhado</option>
-                    <option value="completo">Completo</option>
-                </select>
-            </div>
-            <div class="config-option">
-                <label for="foco-correcao">Foco da Correção:</label>
-                <select id="foco-correcao">
-                    <option value="geral" selected>Geral</option>
-                    <option value="gramatica">Gramática</option>
-                    <option value="estrutura">Estrutura Textual</option>
-                    <option value="argumentacao">Argumentação</option>
-                </select>
-            </div>
-
             <div class="api-config">
                 <h3>Configuração da API</h3>
-                <input type="text" id="api-url" placeholder="URL da API (ex: https://sua-api.com/corrigir)">
-                <input type="text" id="api-key" placeholder="Chave da API (opcional)">
+                <input type="text" id="api-url" placeholder="URL da API (ex: http://127.0.0.1:8000/corrigir-redacao/)">
                 <button id="save-api-config">Salvar Configuração</button>
             </div>
         </div>
@@ -433,86 +416,54 @@
             // Elementos DOM
             const uploadArea = document.getElementById('upload-area');
             const fileInput = document.getElementById('file-input');
-            const textInput = document.getElementById('text-input');
+            const uploadTitle = document.getElementById('upload-title');
+            const uploadText = document.getElementById('upload-text');
             const submitBtn = document.getElementById('submit-btn');
             const modelSelect = document.getElementById('model-select');
             const loading = document.getElementById('loading');
             const errorMessage = document.getElementById('error-message');
             const resultContent = document.getElementById('result-content');
             const redacoesList = document.getElementById('redacoes-list');
-            const tipoRedacaoSelect = document.getElementById('tipo-redacao');
-            const nivelDetalheSelect = document.getElementById('nivel-detalhe');
-            const focoCorrecaoSelect = document.getElementById('foco-correcao');
             const apiUrlInput = document.getElementById('api-url');
-            const apiKeyInput = document.getElementById('api-key');
             const saveApiConfigBtn = document.getElementById('save-api-config');
 
+            // --- INÍCIO DA SEÇÃO MODIFICADA ---
+            
             // Configurações da API
-            let apiConfig = JSON.parse(localStorage.getItem('apiConfig')) || {
-                url: '',
-                key: ''
-            };
-
-            // Carregar configurações da API
+            let apiConfig = JSON.parse(localStorage.getItem('apiConfig')) || { url: '' };
             apiUrlInput.value = apiConfig.url;
-            apiKeyInput.value = apiConfig.key;
 
-            // Salvar configurações da API
             saveApiConfigBtn.addEventListener('click', function () {
-                apiConfig = {
-                    url: apiUrlInput.value.trim(),
-                    key: apiKeyInput.value.trim()
-                };
+                apiConfig = { url: apiUrlInput.value.trim() };
                 localStorage.setItem('apiConfig', JSON.stringify(apiConfig));
                 alert('Configurações da API salvas com sucesso!');
             });
 
-            // Dados das redações (do localStorage)
             let redacoesSalvas = JSON.parse(localStorage.getItem('redacoesSalvas')) || [];
 
-            // Função para salvar redações no localStorage
             function salvarRedacoes() {
                 localStorage.setItem('redacoesSalvas', JSON.stringify(redacoesSalvas));
             }
 
-            // Carregar lista de redações
             function carregarRedacoes() {
                 redacoesList.innerHTML = '';
-
                 if (redacoesSalvas.length === 0) {
-                    redacoesList.innerHTML = `
-                        <div class="empty-state">
-                            <i>📝</i>
-                            <p>Nenhuma redação salva ainda.</p>
-                        </div>
-                    `;
+                    redacoesList.innerHTML = `<div class="empty-state"><i>📂</i><p>Nenhuma redação salva.</p></div>`;
                     return;
                 }
-
                 redacoesSalvas.forEach(redacao => {
                     const item = document.createElement('div');
                     item.className = 'redacao-item';
-                    item.innerHTML = `
-                        <h3>${redacao.titulo}</h3>
-                        <p>Data: ${redacao.data} | Nota: ${redacao.nota}</p>
-                        <div class="redacao-actions">
-                            <button class="action-btn reprocess-btn" data-id="${redacao.id}">Corrigir Novamente</button>
-                            <button class="action-btn delete-btn" data-id="${redacao.id}">Apagar</button>
-                        </div>
-                    `;
-
-                    // Evento para visualizar a correção
+                    item.innerHTML = `<h3>${redacao.titulo}</h3><p>Data: ${redacao.data} | Nota: ${redacao.nota}</p><div class="redacao-actions"><button class="action-btn delete-btn" data-id="${redacao.id}">Apagar</button></div>`;
+                    
                     item.addEventListener('click', (e) => {
                         if (!e.target.classList.contains('action-btn')) {
                             document.querySelectorAll('.redacao-item').forEach(el => el.classList.remove('active'));
                             item.classList.add('active');
                             exibirResultado(redacao.resultado);
-                            textInput.value = redacao.texto;
-                            modelSelect.value = redacao.modelo;
                         }
                     });
-
-                    // Evento para apagar redação
+                    
                     const deleteBtn = item.querySelector('.delete-btn');
                     deleteBtn.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -520,189 +471,104 @@
                             apagarRedacao(redacao.id);
                         }
                     });
-
-                    // Evento para reprocessar redação
-                    const reprocessBtn = item.querySelector('.reprocess-btn');
-                    reprocessBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        reprocessarRedacao(redacao);
-                    });
-
+                    
                     redacoesList.appendChild(item);
                 });
             }
 
-            // Apagar redação
             function apagarRedacao(id) {
                 redacoesSalvas = redacoesSalvas.filter(redacao => redacao.id !== id);
                 salvarRedacoes();
                 carregarRedacoes();
-
-                // Limpar área de resultado se a redação apagada estava sendo visualizada
                 if (document.querySelector('.redacao-item.active') === null) {
-                    resultContent.innerHTML = `
-                        <div class="empty-state">
-                            <i>📝</i>
-                            <p>Envie uma redação para ver o resultado da correção aqui.</p>
-                        </div>
-                    `;
-                    textInput.value = '';
+                    resultContent.innerHTML = `<div class="empty-state"><i>📝</i><p>Envie uma redação para ver o resultado da correção aqui.</p></div>`;
                 }
             }
 
-            // Reprocessar redação
-            function reprocessarRedacao(redacao) {
-                // Preencher os campos com os dados da redação
-                textInput.value = redacao.texto;
-                modelSelect.value = redacao.modelo;
-
-                // Enviar para correção novamente
-                submitBtn.click();
-            }
-
-            // Inicializar lista de redações
             carregarRedacoes();
 
-            // Upload de arquivo
-            uploadArea.addEventListener('click', () => {
-                fileInput.click();
-            });
-
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.style.borderColor = 'var(--primary-color)';
-                uploadArea.style.backgroundColor = '#f0f4f8';
-            });
-
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.style.borderColor = 'var(--border-color)';
-                uploadArea.style.backgroundColor = 'white';
-            });
-
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary-color)'; });
+            uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border-color)'; });
             uploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
                 uploadArea.style.borderColor = 'var(--border-color)';
-                uploadArea.style.backgroundColor = 'white';
-
                 if (e.dataTransfer.files.length) {
                     fileInput.files = e.dataTransfer.files;
-                    processarArquivo(e.dataTransfer.files[0]);
+                    handleFileSelect(e.dataTransfer.files[0]);
                 }
             });
 
             fileInput.addEventListener('change', () => {
                 if (fileInput.files.length) {
-                    processarArquivo(fileInput.files[0]);
+                    handleFileSelect(fileInput.files[0]);
                 }
             });
 
-            function processarArquivo(file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    textInput.value = e.target.result;
-                };
-                reader.readAsText(file);
+            function handleFileSelect(file) {
+                 if (file) {
+                    uploadTitle.textContent = "Arquivo Selecionado";
+                    uploadText.textContent = file.name;
+                    uploadArea.classList.add('file-selected');
+                }
             }
 
-            // Função para enviar para a API real
-            async function enviarParaCorrecao(texto, modelo, tipoRedacao, nivelDetalhe, focoCorrecao) {
-                // Verificar se a URL da API está configurada
-                if (!apiConfig.url) {
-                    throw new Error('URL da API não configurada. Configure no painel direito.');
-                }
-
-                // Dados que serão enviados para a API
-                const dadosEnvio = {
-                    texto: texto,
-                    modelo: modelo,
-                    tipo_redacao: tipoRedacao,
-                    nivel_detalhe: nivelDetalhe,
-                    foco_correcao: focoCorrecao
-                };
-
-                // Configurar headers
-                const headers = {
-                    'Content-Type': 'application/json'
-                };
-
-                // Adicionar API key se fornecida
-                if (apiConfig.key) {
-                    headers['Authorization'] = `Bearer ${apiConfig.key}`;
-                }
-
-                // Fazer a requisição POST para a API
-                const response = await fetch(apiConfig.url, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(dadosEnvio)
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Erro na API: ${response.status} - ${errorText}`);
-                }
-
-                // Retornar o JSON da resposta da API
-                return await response.json();
-            }
-
-            // Enviar para correção
+            // FUNÇÃO PRINCIPAL MODIFICADA
             submitBtn.addEventListener('click', async () => {
-                const texto = textInput.value.trim();
-                const modelo = modelSelect.value;
-                const tipoRedacao = tipoRedacaoSelect.value;
-                const nivelDetalhe = nivelDetalheSelect.value;
-                const focoCorrecao = focoCorrecaoSelect.value;
-
-                if (!texto) {
-                    showError('Por favor, digite ou envie uma redação para correção.');
+                const file = fileInput.files[0];
+                if (!file) {
+                    showError('Por favor, faça o upload de uma imagem da redação.');
+                    return;
+                }
+                if (!apiConfig.url) {
+                    showError('URL da API não configurada. Configure no painel direito.');
                     return;
                 }
 
-                // Desabilitar botão e mostrar loading
                 submitBtn.disabled = true;
                 loading.style.display = 'block';
                 errorMessage.style.display = 'none';
+                resultContent.innerHTML = `<div class="empty-state"><i>📝</i><p>Aguardando resultado...</p></div>`;
+
+                const formData = new FormData();
+                formData.append('foto', file);
 
                 try {
-                    // CHAMADA REAL DA API
-                    const resultado = await enviarParaCorrecao(texto, modelo, tipoRedacao, nivelDetalhe, focoCorrecao);
+                    const response = await fetch(apiConfig.url, {
+                        method: 'POST',
+                        body: formData
+                    });
 
-                    // Criar objeto da redação com a resposta da API
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `Erro na API: ${response.status}`);
+                    }
+
+                    const resultado = await response.json();
+                    
                     const novaRedacao = {
-                        id: Date.now(), // ID único baseado no timestamp
-                        titulo: `Redação ${new Date().toLocaleDateString()}`,
+                        id: Date.now(),
+                        titulo: `Redação de ${new Date().toLocaleDateString()}`,
                         data: new Date().toLocaleDateString(),
-                        nota: resultado.notaTotal || resultado.nota_final || resultado.pontuacao || 0,
-                        texto: texto,
-                        modelo: modelo,
+                        nota: resultado.nota_final || 0,
                         resultado: resultado,
-                        configuracao: {
-                            tipoRedacao: tipoRedacao,
-                            nivelDetalhe: nivelDetalhe,
-                            focoCorrecao: focoCorrecao
-                        }
                     };
 
-                    // Adicionar à lista e salvar
                     redacoesSalvas.push(novaRedacao);
                     salvarRedacoes();
                     carregarRedacoes();
-
-                    // Exibir resultado
                     exibirResultado(resultado);
 
-                    // Selecionar a nova redação na lista
-                    const novaItem = document.querySelector(`.redacao-item:last-child`);
-                    if (novaItem) {
+                    const ultimoItem = redacoesList.querySelector('.redacao-item:last-child');
+                    if (ultimoItem) {
                         document.querySelectorAll('.redacao-item').forEach(el => el.classList.remove('active'));
-                        novaItem.classList.add('active');
+                        ultimoItem.classList.add('active');
                     }
+
                 } catch (error) {
-                    showError(`Erro ao processar a redação: ${error.message}`);
+                    showError(`Erro ao processar: ${error.message}`);
                     console.error('Erro detalhado:', error);
                 } finally {
-                    // Reabilitar botão e esconder loading
                     submitBtn.disabled = false;
                     loading.style.display = 'none';
                 }
@@ -713,78 +579,34 @@
                 errorMessage.style.display = 'block';
             }
 
-            // Exibir resultado da correção (adaptável para diferentes estruturas de API)
             function exibirResultado(resultado) {
-                // Verificar a estrutura da resposta e adaptar
-                const notaTotal = resultado.notaTotal || resultado.nota_final || resultado.pontuacao || 0;
-
-                let html = `
-                    <div class="total-score">
-                        Nota Total: ${notaTotal} pontos
-                    </div>
-                `;
-
-                // Verificar se os critérios vêm em formato de array ou objeto
-                let criterios = resultado.criterios || resultado.competencias || [];
-
-                // Se for um objeto, converter para array
-                if (!Array.isArray(criterios) && typeof criterios === 'object') {
-                    criterios = Object.values(criterios);
+                if (!resultado || !resultado.competencias) {
+                     resultContent.innerHTML = `<div class="error-message" style="display:block;">Resposta da API em formato inválido.</div>`;
+                     return;
                 }
 
-                if (Array.isArray(criterios) {
-                    criterios.forEach(criterio => {
-                        const nome = criterio.nome || criterio.competencia || criterio.criterio || 'Critério';
-                        const nota = criterio.nota || criterio.pontuacao || criterio.score || 0;
-                        const comentario = criterio.comentario || criterio.observacao || criterio.feedback || 'Sem comentário.';
-
-                        html += `
-                            <div class="criteria-item">
-                                <div class="criteria-name">
-                                    ${nome}
-                                    <span class="criteria-score">${nota} pontos</span>
-                                </div>
-                                <div class="criteria-comment">${comentario}</div>
-                            </div>
-                        `;
-                    });
-                }
-
-                // Comentário geral
-                const comentarioGeral = resultado.comentarioGeral || resultado.comentario_geral ||
-                    resultado.feedback_geral || resultado.observacoes ||
-                    'Sem comentário geral.';
-
-                html += `
+                let competenciasHtml = resultado.competencias.map(c => `
                     <div class="criteria-item">
-                        <div class="criteria-name">Comentário Geral</div>
-                        <div class="criteria-comment">${comentarioGeral}</div>
+                        <div class="criteria-header">
+                            <span class="criteria-name">Competência ${c.id}</span>
+                            <span class="criteria-score">${c.nota} pontos</span>
+                        </div>
+                        <p class="criteria-comment">${c.feedback}</p>
+                    </div>
+                `).join('');
+
+                resultContent.innerHTML = `
+                    <div class="criteria-item">
+                        <div class="criteria-name">Análise Geral</div>
+                        <p class="criteria-comment">${resultado.analise_geral}</p>
+                    </div>
+                    ${competenciasHtml}
+                    <div class="total-score">
+                        Nota Final: ${resultado.nota_final}
                     </div>
                 `;
-
-                // Sugestões de melhoria
-                let sugestoes = resultado.sugestoes || resultado.sugestoes_melhoria || [];
-
-                // Se for uma string, tentar dividir por quebras de linha
-                if (typeof sugestoes === 'string') {
-                    sugestoes = sugestoes.split('\n').filter(s => s.trim());
-                }
-
-                if (Array.isArray(sugestoes) && sugestoes.length > 0) {
-                    html += `
-                        <div class="criteria-item">
-                            <div class="criteria-name">Sugestões de Melhoria</div>
-                            <div class="criteria-comment">
-                                <ul>
-                                    ${sugestoes.map(sugestao => `<li>${sugestao}</li>`).join('')}
-                                </ul>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                resultContent.innerHTML = html;
             }
+             // --- FIM DA SEÇÃO MODIFICADA ---
         });
     </script>
 </body>
