@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Corretor de Redação ENEM</title>
+    <title>Corretor de Redação com IA</title>
     <style>
         :root {
             --primary-color: #4a6fa5;
@@ -35,7 +35,6 @@
             min-height: 100vh;
         }
 
-        /* Painel Esquerdo - Lista de Redações */
         .left-panel {
             width: 25%;
             background-color: white;
@@ -106,17 +105,35 @@
             color: white;
         }
 
-        .reprocess-btn {
-            background-color: var(--warning-color);
-            color: var(--dark-color);
-        }
-
-        /* Painel Central - Chat e Correção */
         .center-panel {
             flex: 1;
             padding: 20px;
             display: flex;
             flex-direction: column;
+        }
+
+        .input-toggle {
+            display: flex;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            background-color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            color: var(--primary-color);
+        }
+
+        .toggle-btn.active {
+            background-color: var(--primary-color);
+            color: white;
         }
 
         .upload-area {
@@ -130,6 +147,18 @@
             transition: all 0.3s ease;
         }
         
+        #text-input-area {
+            display: none;
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            resize: vertical;
+        }
+
         .upload-area.file-selected {
             border-color: var(--success-color);
             background-color: #f0fff4;
@@ -145,25 +174,21 @@
             margin-bottom: 10px;
         }
 
-        .text-input {
-            width: 100%;
-            min-height: 200px;
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            resize: vertical;
-            font-size: 16px;
-            display: none; /* Oculta a área de texto por padrão */
-        }
-
         .options-bar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+            gap: 10px;
         }
 
-        .model-select {
+        .options-left {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .model-select, #ufsc-genre-input {
             padding: 10px 15px;
             border: 1px solid var(--border-color);
             border-radius: 5px;
@@ -180,6 +205,7 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s ease;
+            white-space: nowrap;
         }
 
         .submit-btn:hover {
@@ -239,7 +265,7 @@
             margin-top: 8px;
             font-size: 14px;
             color: #555;
-            white-space: pre-wrap; /* Preserva quebras de linha no feedback */
+            white-space: pre-wrap;
         }
 
         .total-score {
@@ -252,7 +278,6 @@
             text-align: center;
         }
 
-        /* Painel Direito - Configurações */
         .right-panel {
             width: 25%;
             background-color: white;
@@ -264,97 +289,18 @@
             margin-bottom: 15px;
             color: var(--primary-color);
         }
+        
+        .loading { display: none; text-align: center; padding: 20px; }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: var(--primary-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-message { color: var(--error-color); padding: 10px; background-color: #f8d7da; border: 1px solid var(--error-color); border-radius: 5px; margin-bottom: 15px; display: none; }
+        .empty-state { text-align: center; padding: 30px; color: #666; }
+        .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; }
 
-        .config-option {
-            margin-bottom: 15px;
-        }
-
-        .config-option label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .config-option select {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-        }
-
-        /* Loading e Estados */
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: var(--primary-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .error-message {
-            color: var(--error-color);
-            padding: 10px;
-            background-color: #f8d7da;
-            border: 1px solid var(--error-color);
-            border-radius: 5px;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #666;
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .api-config {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-
-        .api-config h3 {
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .api-config input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-
-        .api-config button {
-            padding: 8px 15px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+        .api-config { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; }
+        .api-config h3 { margin-bottom: 10px; font-size: 16px; }
+        .api-config input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 5px; margin-bottom: 10px; }
+        .api-config button { padding: 8px 15px; background-color: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 
@@ -362,41 +308,44 @@
     <div class="container">
         <div class="left-panel">
             <h2>Minhas Redações</h2>
-            <div class="redacoes-container" id="redacoes-list">
-                </div>
+            <div class="redacoes-container" id="redacoes-list"></div>
         </div>
 
         <div class="center-panel">
-            <div class="upload-area" id="upload-area">
-                <i id="upload-icon">📄</i>
-                <h3 id="upload-title">Fazer upload de uma redação</h3>
-                <p id="upload-text">Arraste um arquivo de imagem aqui ou clique para selecionar</p>
-                <input type="file" id="file-input" accept="image/*" style="display: none;">
+            <div class="input-toggle">
+                <button class="toggle-btn active" id="toggle-upload">Upload de Imagem</button>
+                <button class="toggle-btn" id="toggle-text">Digitar Texto</button>
+            </div>
+            
+            <div id="upload-container">
+                <div class="upload-area" id="upload-area">
+                    <i id="upload-icon">📄</i>
+                    <h3 id="upload-title">Fazer upload de uma redação</h3>
+                    <p id="upload-text">Arraste um arquivo de imagem aqui ou clique para selecionar</p>
+                    <input type="file" id="file-input" accept="image/*" style="display: none;">
+                </div>
             </div>
 
-            <textarea class="text-input" id="text-input" placeholder="Ou digite sua redação aqui..."></textarea>
-
+            <textarea id="text-input-area" placeholder="Cole ou digite sua redação aqui..."></textarea>
+            
             <div class="options-bar">
-                <select class="model-select" id="model-select">
-                    <option value="enem">Redação ENEM</option>
-                </select>
+                <div class="options-left">
+                    <select class="model-select" id="model-select">
+                        <option value="enem">Redação ENEM</option>
+                        <option value="ufsc">Redação UFSC</option>
+                    </select>
+                    <input type="text" id="ufsc-genre-input" placeholder="Gênero (ex: Conto)" style="display: none;">
+                </div>
                 <button class="submit-btn" id="submit-btn">Enviar para Correção</button>
             </div>
 
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>Corrigindo sua redação... Isso pode levar alguns segundos.</p>
-            </div>
-
+            <div class="loading" id="loading"><div class="spinner"></div><p>Corrigindo... Isso pode levar alguns segundos.</p></div>
             <div class="error-message" id="error-message"></div>
 
             <div class="result-area" id="result-area">
                 <h2 class="result-title">Resultado da Correção</h2>
                 <div id="result-content">
-                    <div class="empty-state">
-                        <i>📝</i>
-                        <p>Envie uma redação para ver o resultado da correção aqui.</p>
-                    </div>
+                    <div class="empty-state"><i>📝</i><p>Envie uma redação para ver o resultado aqui.</p></div>
                 </div>
             </div>
         </div>
@@ -404,8 +353,8 @@
         <div class="right-panel">
             <h2>Configurações</h2>
             <div class="api-config">
-                <h3>Configuração da API</h3>
-                <input type="text" id="api-url" placeholder="URL da API (ex: http://127.0.0.1:8000/corrigir-redacao/)">
+                <h3>URL Base da API</h3>
+                <input type="text" id="api-url" placeholder="ex: http://127.0.0.1:8000">
                 <button id="save-api-config">Salvar Configuração</button>
             </div>
         </div>
@@ -413,33 +362,36 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Elementos DOM
+            // --- ELEMENTOS DOM ---
             const uploadArea = document.getElementById('upload-area');
             const fileInput = document.getElementById('file-input');
             const uploadTitle = document.getElementById('upload-title');
             const uploadText = document.getElementById('upload-text');
             const submitBtn = document.getElementById('submit-btn');
             const modelSelect = document.getElementById('model-select');
+            const ufscGenreInput = document.getElementById('ufsc-genre-input');
             const loading = document.getElementById('loading');
             const errorMessage = document.getElementById('error-message');
             const resultContent = document.getElementById('result-content');
             const redacoesList = document.getElementById('redacoes-list');
             const apiUrlInput = document.getElementById('api-url');
             const saveApiConfigBtn = document.getElementById('save-api-config');
+            const toggleUploadBtn = document.getElementById('toggle-upload');
+            const toggleTextBtn = document.getElementById('toggle-text');
+            const uploadContainer = document.getElementById('upload-container');
+            const textInputArea = document.getElementById('text-input-area');
 
-            // --- INÍCIO DA SEÇÃO MODIFICADA ---
-            
-            // Configurações da API
+            // --- ESTADO DA APLICAÇÃO ---
             let apiConfig = JSON.parse(localStorage.getItem('apiConfig')) || { url: '' };
             apiUrlInput.value = apiConfig.url;
-
-            saveApiConfigBtn.addEventListener('click', function () {
-                apiConfig = { url: apiUrlInput.value.trim() };
-                localStorage.setItem('apiConfig', JSON.stringify(apiConfig));
-                alert('Configurações da API salvas com sucesso!');
-            });
-
             let redacoesSalvas = JSON.parse(localStorage.getItem('redacoesSalvas')) || [];
+            let currentInputMode = 'upload'; // 'upload' ou 'text'
+
+            // --- FUNÇÕES DE LÓGICA ---
+            function showError(mensagem) {
+                errorMessage.textContent = mensagem;
+                errorMessage.style.display = 'block';
+            }
 
             function salvarRedacoes() {
                 localStorage.setItem('redacoesSalvas', JSON.stringify(redacoesSalvas));
@@ -451,10 +403,10 @@
                     redacoesList.innerHTML = `<div class="empty-state"><i>📂</i><p>Nenhuma redação salva.</p></div>`;
                     return;
                 }
-                redacoesSalvas.forEach(redacao => {
+                redacoesSalvas.slice().reverse().forEach(redacao => {
                     const item = document.createElement('div');
                     item.className = 'redacao-item';
-                    item.innerHTML = `<h3>${redacao.titulo}</h3><p>Data: ${redacao.data} | Nota: ${redacao.nota}</p><div class="redacao-actions"><button class="action-btn delete-btn" data-id="${redacao.id}">Apagar</button></div>`;
+                    item.innerHTML = `<h3>${redacao.titulo}</h3><p>Data: ${redacao.data} | Nota: ${typeof redacao.nota === 'number' ? redacao.nota.toFixed(2) : redacao.nota}</p><div class="redacao-actions"><button class="action-btn delete-btn" data-id="${redacao.id}">Apagar</button></div>`;
                     
                     item.addEventListener('click', (e) => {
                         if (!e.target.classList.contains('action-btn')) {
@@ -464,8 +416,7 @@
                         }
                     });
                     
-                    const deleteBtn = item.querySelector('.delete-btn');
-                    deleteBtn.addEventListener('click', (e) => {
+                    item.querySelector('.delete-btn').addEventListener('click', (e) => {
                         e.stopPropagation();
                         if (confirm('Tem certeza que deseja apagar esta redação?')) {
                             apagarRedacao(redacao.id);
@@ -481,11 +432,60 @@
                 salvarRedacoes();
                 carregarRedacoes();
                 if (document.querySelector('.redacao-item.active') === null) {
-                    resultContent.innerHTML = `<div class="empty-state"><i>📝</i><p>Envie uma redação para ver o resultado da correção aqui.</p></div>`;
+                    resultContent.innerHTML = `<div class="empty-state"><i>📝</i><p>Envie uma redação para ver o resultado aqui.</p></div>`;
                 }
             }
 
-            carregarRedacoes();
+            function handleFileSelect(file) {
+                 if (file) {
+                    uploadTitle.textContent = "Arquivo Selecionado";
+                    uploadText.textContent = file.name;
+                    uploadArea.classList.add('file-selected');
+                }
+            }
+
+            function exibirResultado(resultado) {
+                if (resultado && resultado.competencias) { // ENEM
+                    let competenciasHtml = resultado.competencias.map(c => `<div class="criteria-item"><div class="criteria-header"><span class="criteria-name">Competência ${c.id}</span><span class="criteria-score">${c.nota}</span></div><p class="criteria-comment">${c.feedback}</p></div>`).join('');
+                    resultContent.innerHTML = `<div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${competenciasHtml}<div class="total-score">Nota Final: ${resultado.nota_final}</div>`;
+                } else if (resultado && resultado.criterios) { // UFSC
+                    let criteriosHtml = resultado.criterios.map(c => `<div class="criteria-item"><div class="criteria-header"><span class="criteria-name">${c.nome}</span><span class="criteria-score">${c.nota.toFixed(2)}</span></div><p class="criteria-comment">${c.feedback}</p></div>`).join('');
+                     resultContent.innerHTML = `<div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${criteriosHtml}<div class="total-score">Nota Final: ${resultado.nota_final.toFixed(2)}</div>`;
+                } else {
+                    resultContent.innerHTML = `<div class="error-message" style="display:block;">Resposta da API em formato inválido.</div>`;
+                    console.error("Resposta inválida:", resultado);
+                }
+            }
+            
+            // --- EVENT LISTENERS ---
+
+            toggleUploadBtn.addEventListener('click', () => {
+                currentInputMode = 'upload';
+                toggleUploadBtn.classList.add('active');
+                toggleTextBtn.classList.remove('active');
+                uploadContainer.style.display = 'block';
+                textInputArea.style.display = 'none';
+            });
+            
+            toggleTextBtn.addEventListener('click', () => {
+                currentInputMode = 'text';
+                toggleTextBtn.classList.add('active');
+                toggleUploadBtn.classList.remove('active');
+                uploadContainer.style.display = 'none';
+                textInputArea.style.display = 'block';
+            });
+
+            saveApiConfigBtn.addEventListener('click', function () {
+                let url = apiUrlInput.value.trim();
+                if (url.endsWith('/')) url = url.slice(0, -1);
+                apiConfig = { url: url };
+                localStorage.setItem('apiConfig', JSON.stringify(apiConfig));
+                alert('Configurações da API salvas!');
+            });
+            
+            modelSelect.addEventListener('change', () => {
+                ufscGenreInput.style.display = (modelSelect.value === 'ufsc') ? 'block' : 'none';
+            });
 
             uploadArea.addEventListener('click', () => fileInput.click());
             uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary-color)'; });
@@ -498,60 +498,82 @@
                     handleFileSelect(e.dataTransfer.files[0]);
                 }
             });
-
             fileInput.addEventListener('change', () => {
-                if (fileInput.files.length) {
-                    handleFileSelect(fileInput.files[0]);
-                }
+                if (fileInput.files.length) handleFileSelect(fileInput.files[0]);
             });
 
-            function handleFileSelect(file) {
-                 if (file) {
-                    uploadTitle.textContent = "Arquivo Selecionado";
-                    uploadText.textContent = file.name;
-                    uploadArea.classList.add('file-selected');
-                }
-            }
-
-            // FUNÇÃO PRINCIPAL MODIFICADA
             submitBtn.addEventListener('click', async () => {
-                const file = fileInput.files[0];
-                if (!file) {
-                    showError('Por favor, faça o upload de uma imagem da redação.');
-                    return;
-                }
+                const selectedModel = modelSelect.value;
                 if (!apiConfig.url) {
                     showError('URL da API não configurada. Configure no painel direito.');
                     return;
                 }
 
+                let requestBody;
+                let endpoint = '';
+                let headers = {};
+                
+                if (currentInputMode === 'upload') {
+                    const file = fileInput.files[0];
+                    if (!file) {
+                        showError('Por favor, faça o upload de uma imagem da redação.');
+                        return;
+                    }
+                    requestBody = new FormData();
+                    requestBody.append('foto', file);
+                    if (selectedModel === 'enem') {
+                        endpoint = '/corrigir-redacao-enem/';
+                    } else { // UFSC
+                        const genero = ufscGenreInput.value.trim();
+                        if (!genero) {
+                            showError('Por favor, informe o gênero textual para a correção da UFSC.');
+                            return;
+                        }
+                        requestBody.append('genero', genero);
+                        endpoint = '/corrigir-redacao-ufsc/';
+                    }
+                } else { // modo 'text'
+                    const texto = textInputArea.value.trim();
+                    if (!texto) {
+                        showError('Por favor, digite o texto da redação.');
+                        return;
+                    }
+                    headers = { 'Content-Type': 'application/json' };
+                    if (selectedModel === 'enem') {
+                        endpoint = '/corrigir-texto-enem/';
+                        requestBody = JSON.stringify({ texto: texto });
+                    } else { // UFSC
+                        const genero = ufscGenreInput.value.trim();
+                        if (!genero) {
+                            showError('Por favor, informe o gênero textual para a correção da UFSC.');
+                            return;
+                        }
+                        endpoint = '/corrigir-texto-ufsc/';
+                        requestBody = JSON.stringify({ texto: texto, genero: genero });
+                    }
+                }
+                
+                const fullApiUrl = apiConfig.url + endpoint;
                 submitBtn.disabled = true;
                 loading.style.display = 'block';
                 errorMessage.style.display = 'none';
                 resultContent.innerHTML = `<div class="empty-state"><i>📝</i><p>Aguardando resultado...</p></div>`;
 
-                const formData = new FormData();
-                formData.append('foto', file);
-
                 try {
-                    const response = await fetch(apiConfig.url, {
-                        method: 'POST',
-                        body: formData
-                    });
-
+                    const response = await fetch(fullApiUrl, { method: 'POST', headers: headers, body: requestBody });
                     if (!response.ok) {
                         const errorData = await response.json();
                         throw new Error(errorData.detail || `Erro na API: ${response.status}`);
                     }
-
                     const resultado = await response.json();
                     
                     const novaRedacao = {
                         id: Date.now(),
-                        titulo: `Redação de ${new Date().toLocaleDateString()}`,
+                        titulo: `Redação ${selectedModel.toUpperCase()} de ${new Date().toLocaleDateString()}`,
                         data: new Date().toLocaleDateString(),
                         nota: resultado.nota_final || 0,
                         resultado: resultado,
+                        tipo: selectedModel
                     };
 
                     redacoesSalvas.push(novaRedacao);
@@ -559,56 +581,25 @@
                     carregarRedacoes();
                     exibirResultado(resultado);
 
-                    const ultimoItem = redacoesList.querySelector('.redacao-item:last-child');
-                    if (ultimoItem) {
+                    const primeiroItem = redacoesList.querySelector('.redacao-item');
+                    if (primeiroItem) {
                         document.querySelectorAll('.redacao-item').forEach(el => el.classList.remove('active'));
-                        ultimoItem.classList.add('active');
+                        primeiroItem.classList.add('active');
                     }
 
                 } catch (error) {
                     showError(`Erro ao processar: ${error.message}`);
                     console.error('Erro detalhado:', error);
+                    resultContent.innerHTML = `<div class="empty-state"><i>❌</i><p>Ocorreu um erro.</p></div>`;
                 } finally {
                     submitBtn.disabled = false;
                     loading.style.display = 'none';
                 }
             });
 
-            function showError(mensagem) {
-                errorMessage.textContent = mensagem;
-                errorMessage.style.display = 'block';
-            }
-
-            function exibirResultado(resultado) {
-                if (!resultado || !resultado.competencias) {
-                     resultContent.innerHTML = `<div class="error-message" style="display:block;">Resposta da API em formato inválido.</div>`;
-                     return;
-                }
-
-                let competenciasHtml = resultado.competencias.map(c => `
-                    <div class="criteria-item">
-                        <div class="criteria-header">
-                            <span class="criteria-name">Competência ${c.id}</span>
-                            <span class="criteria-score">${c.nota} pontos</span>
-                        </div>
-                        <p class="criteria-comment">${c.feedback}</p>
-                    </div>
-                `).join('');
-
-                resultContent.innerHTML = `
-                    <div class="criteria-item">
-                        <div class="criteria-name">Análise Geral</div>
-                        <p class="criteria-comment">${resultado.analise_geral}</p>
-                    </div>
-                    ${competenciasHtml}
-                    <div class="total-score">
-                        Nota Final: ${resultado.nota_final}
-                    </div>
-                `;
-            }
-             // --- FIM DA SEÇÃO MODIFICADA ---
+            // --- INICIALIZAÇÃO ---
+            carregarRedacoes();
         });
     </script>
 </body>
-
 </html>
