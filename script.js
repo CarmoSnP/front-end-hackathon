@@ -16,8 +16,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const errorMessage = document.getElementById('error-message');
     const resultContent = document.getElementById('result-content');
     const redacoesList = document.getElementById('redacoes-list');
-    const apiUrlInput = document.getElementById('api-url');
-    const saveApiConfigBtn = document.getElementById('save-api-config');
     const toggleUploadBtn = document.getElementById('toggle-upload');
     const toggleTextBtn = document.getElementById('toggle-text');
     const uploadContainer = document.getElementById('upload-container');
@@ -48,8 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const appViews = document.querySelectorAll('.app-view');
 
     // --- ESTADO DA APLICAÇÃO ---
-    let apiConfig = JSON.parse(localStorage.getItem('apiConfig')) || { url: '' };
-    apiUrlInput.value = apiConfig.url;
+    let apiConfig = { url: 'https://hackathon-ufsc-ia.onrender.com' };
     let redacoesSalvas = JSON.parse(localStorage.getItem('redacoesSalvas')) || [];
     let currentInputMode = 'upload'; // 'upload' ou 'text'
 
@@ -221,14 +218,6 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleUploadBtn.classList.remove('active');
         uploadContainer.style.display = 'none';
         textInputArea.style.display = 'block';
-    });
-
-    saveApiConfigBtn.addEventListener('click', function () {
-        let url = apiUrlInput.value.trim();
-        if (url.endsWith('/')) url = url.slice(0, -1);
-        apiConfig = { url: url };
-        localStorage.setItem('apiConfig', JSON.stringify(apiConfig));
-        alert('Configurações da API salvas!');
     });
 
     modelSelect.addEventListener('change', () => {
