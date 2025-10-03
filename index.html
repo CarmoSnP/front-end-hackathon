@@ -42,7 +42,8 @@
                     <div class="left-panel">
                         <div class="panel-header">
                             <h2>Minhas Redações (Grifo)</h2>
-                            <button id="toggle-sidebar-btn" class="panel-toggle-btn" title="Recolher Barra Lateral">‹</button>
+                            <button id="toggle-sidebar-btn" class="panel-toggle-btn"
+                                title="Recolher Barra Lateral">‹</button>
                         </div>
                         <div class="redacoes-container" id="redacoes-list"></div>
                     </div>
@@ -57,7 +58,10 @@
                             <div class="upload-area" id="upload-area">
                                 <i id="upload-icon">📄</i>
                                 <h3 id="upload-title">Fazer upload de uma redação</h3>
-                                <p id="upload-text">Arraste um arquivo de imagem aqui ou clique para selecionar</p>
+                                <p id="upload-text">Arraste um arquivo de <b style="color: rgb(0, 208, 255);">IMAGEM</b>
+                                    aqui ou
+                                    clique para selecionar
+                                </p>
                                 <input type="file" id="file-input" accept="image/*" style="display: none;">
                             </div>
                         </div>
@@ -70,12 +74,16 @@
                                     <option value="enem">Redação ENEM</option>
                                     <option value="ufsc">Redação UFSC</option>
                                 </select>
-                                <input type="text" id="ufsc-genre-input" placeholder="Gênero (ex: Conto)" style="display: none;">
+                                <input type="text" id="ufsc-genre-input" placeholder="Gênero (ex: Conto)"
+                                    style="display: none;">
                             </div>
                             <button class="submit-btn" id="submit-btn">Enviar para Correção</button>
                         </div>
 
-                        <div class="loading" id="loading"><div class="spinner"></div><p>Analisando o tecido da realidade textual...</p></div>
+                        <div class="loading" id="loading">
+                            <div class="spinner"></div>
+                            <p>Analisando o tecido da realidade textual...</p>
+                        </div>
                         <div class="error-message" id="error-message"></div>
 
                         <div class="result-area" id="result-area">
@@ -84,7 +92,9 @@
                                 <button id="toggle-maximize-btn" class="panel-toggle-btn" title="Maximizar">⛶</button>
                             </div>
                             <div id="result-content">
-                                <div class="empty-state"><i>📝</i><p>Aguardando envio para análise...</p></div>
+                                <div class="empty-state"><i>📝</i>
+                                    <p>Aguardando envio para análise...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -104,20 +114,29 @@
                     </div>
                     <div id="rag-files-list"></div>
                     <button class="submit-btn" id="rag-upload-btn" style="margin-bottom: 20px;">Enviar Arquivo</button>
-                    <div class="loading" id="rag-upload-loading"><div class="spinner"></div><p>Integrando conhecimento ao Sinapse...</p></div>
+                    <div class="loading" id="rag-upload-loading">
+                        <div class="spinner"></div>
+                        <p>Integrando conhecimento ao Sinapse...</p>
+                    </div>
                     <div class="error-message" id="rag-upload-error-message"></div>
 
                     <hr class="divider">
 
                     <p class="instruction-text">Faça uma pergunta sobre o documento enviado.</p>
                     <textarea id="rag-question-input" placeholder="Digite sua pergunta aqui..."></textarea>
-                    <button class="submit-btn" id="rag-submit-btn" style="align-self: flex-end;">Enviar Pergunta</button>
+                    <button class="submit-btn" id="rag-submit-btn" style="align-self: flex-end;">Enviar
+                        Pergunta</button>
 
-                    <div class="loading" id="rag-loading"><div class="spinner"></div><p>Consultando a base de conhecimento...</p></div>
+                    <div class="loading" id="rag-loading">
+                        <div class="spinner"></div>
+                        <p>Consultando a base de conhecimento...</p>
+                    </div>
                     <div class="error-message" id="rag-error-message"></div>
 
                     <div class="result-area" id="rag-result-area">
-                        <div class="empty-state"><i>💡</i><p>A resposta para sua pergunta aparecerá aqui.</p></div>
+                        <div class="empty-state"><i>💡</i>
+                            <p>A resposta para sua pergunta aparecerá aqui.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -126,4 +145,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const uploadContainer = document.getElementById('upload-container');
     const textInputArea = document.getElementById('text-input-area');
     const resultArea = document.getElementById('result-area'); // Adicionado seletor
-    
+
     // --- NOVOS ELEMENTOS DE CONTROLE DA UI ---
     const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
     const leftPanel = document.querySelector('.left-panel');
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <button class="action-btn rename-btn" title="Renomear" data-id="${redacao.id}">✏️</button>
                                 <button class="action-btn delete-btn" title="Apagar" data-id="${redacao.id}">🗑️</button>
                             </div>`;
-            
+
             item.addEventListener('click', (e) => {
                 // Modificado para não ativar ao clicar nos botões
                 if (!e.target.classList.contains('action-btn')) {
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     exibirResultado(redacao.resultado);
                 }
             });
-            
+
             item.querySelector('.delete-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (confirm('Tem certeza que deseja apagar esta redação?')) {
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             });
-            
+
             redacoesList.appendChild(item);
         });
     }
@@ -128,13 +128,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function handleFileSelect(file) {
-         if (file) {
+        if (file) {
             uploadTitle.textContent = "Arquivo Selecionado";
             uploadText.textContent = file.name;
             uploadArea.classList.add('file-selected');
         }
     }
-    
+
     function updateRagFilesList() {
         ragFilesList.innerHTML = '';
         const file = ragFileInput.files[0];
@@ -155,13 +155,13 @@ document.addEventListener('DOMContentLoaded', function () {
             resultContent.innerHTML = `<div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${competenciasHtml}<div class="total-score">Nota Final: ${resultado.nota_final}</div>`;
         } else if (resultado && resultado.criterios) { // UFSC
             let criteriosHtml = resultado.criterios.map(c => `<div class="criteria-item"><div class="criteria-header"><span class="criteria-name">${c.nome}</span><span class="criteria-score">${c.nota.toFixed(2)}</span></div><p class="criteria-comment">${c.feedback}</p></div>`).join('');
-             resultContent.innerHTML = `<div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${criteriosHtml}<div class="total-score">Nota Final: ${resultado.nota_final.toFixed(2)}</div>`;
+            resultContent.innerHTML = `<div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${criteriosHtml}<div class="total-score">Nota Final: ${resultado.nota_final.toFixed(2)}</div>`;
         } else {
             resultContent.innerHTML = `<div class="error-message" style="display:block;">Resposta da API em formato inválido.</div>`;
             console.error("Resposta inválida:", resultado);
         }
     }
-    
+
     // --- EVENT LISTENERS ---
 
     // Lógica da Tela Inicial
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function () {
         uploadContainer.style.display = 'block';
         textInputArea.style.display = 'none';
     });
-    
+
     toggleTextBtn.addEventListener('click', () => {
         currentInputMode = 'text';
         toggleTextBtn.classList.add('active');
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem('apiConfig', JSON.stringify(apiConfig));
         alert('Configurações da API salvas!');
     });
-    
+
     modelSelect.addEventListener('change', () => {
         ufscGenreInput.style.display = (modelSelect.value === 'ufsc') ? 'block' : 'none';
     });
@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let requestBody;
         let endpoint = '';
         let headers = {};
-        
+
         if (currentInputMode === 'upload') {
             const file = fileInput.files[0];
             if (!file) { showError('Por favor, faça o upload de uma imagem da redação.'); return; }
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 requestBody = JSON.stringify({ texto: texto, genero: genero });
             }
         }
-        
+
         const fullApiUrl = apiConfig.url + endpoint;
         submitBtn.disabled = true;
         loading.style.display = 'block';
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(errorData.detail || `Erro na API: ${response.status}`);
             }
             const resultado = await response.json();
-            
+
             const novaRedacao = {
                 id: Date.now(),
                 titulo: `Grifo (${selectedModel.toUpperCase()}) de ${new Date().toLocaleDateString()}`,
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loading.style.display = 'none';
         }
     });
-    
+
     // --- RAG (Sinapse) EVENT LISTENERS ---
 
     ragUploadArea.addEventListener('click', () => ragFileInput.click());
@@ -405,8 +405,8 @@ document.addEventListener('DOMContentLoaded', function () {
             showError('Por favor, digite uma pergunta.', 'rag');
             return;
         }
-        
-        const endpoint = '/rag/query'; 
+
+        const endpoint = '/rag/query';
         const fullApiUrl = apiConfig.url + endpoint;
 
         ragSubmitBtn.disabled = true;
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(fullApiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: pergunta }) 
+                body: JSON.stringify({ question: pergunta })
             });
 
             if (!response.ok) {
@@ -427,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const resultado = await response.json();
-            ragResultArea.textContent = resultado.answer || "Não foi possível obter uma resposta.";
+            ragResultArea.innerHTML = resultado.answer || "Não foi possível obter uma resposta.";
 
         } catch (error) {
             showError(`Erro ao processar: ${error.message}`, 'rag');
