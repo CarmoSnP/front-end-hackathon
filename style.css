@@ -103,7 +103,6 @@ body {
 /* --- App Wrapper --- */
 #app-wrapper {
     display: none;
-    /* Alterado por JS */
     flex-direction: column;
     height: 100vh;
     animation: fadeIn 1.5s ease-in-out;
@@ -130,7 +129,6 @@ body {
         transform: scale(1);
     }
 }
-
 
 /* --- Header --- */
 .main-header {
@@ -183,43 +181,12 @@ body {
     font-weight: bold;
 }
 
-.api-config input {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    width: 250px;
-    background: rgba(0, 0, 0, 0.3);
-    color: var(--text-light);
-    transition: all 0.3s ease;
-}
-
-.api-config input:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 10px var(--accent-color);
-}
-
-.api-config button {
-    padding: 8px 15px;
-    background: linear-gradient(45deg, var(--primary-glow), var(--accent-color));
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.api-config button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 10px var(--primary-glow);
-}
-
 /* --- Layout Principal --- */
 .content-wrapper {
     flex-grow: 1;
     display: flex;
     overflow: hidden;
+    height: calc(100vh - 80px);
 }
 
 .app-view {
@@ -230,16 +197,18 @@ body {
 .app-view.active {
     display: flex;
     flex-grow: 1;
-    /* CORREÇÃO: Adicionada barra de rolagem vertical quando o conteúdo for maior que a tela */
     overflow-y: auto;
+    height: 100%;
 }
 
 .container {
     display: flex;
     width: 100%;
     flex-grow: 1;
+    height: 100%;
 }
 
+/* --- PAINEL LATERAL (AMBOS GRIFO E SINAPSE) --- */
 .left-panel {
     width: 25%;
     min-width: 300px;
@@ -250,9 +219,10 @@ body {
     display: flex;
     flex-direction: column;
     transition: min-width 0.4s ease, width 0.4s ease, padding 0.4s ease, opacity 0.4s ease;
+    height: 100%;
 }
 
-/* --- NOVOS ESTILOS PARA PAINEIS --- */
+/* CORREÇÃO: Panel Header - título e botão na mesma linha */
 .panel-header {
     display: flex;
     justify-content: space-between;
@@ -260,6 +230,7 @@ body {
     margin-bottom: 20px;
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 10px;
+    width: 100%;
 }
 
 .panel-header h2 {
@@ -270,6 +241,9 @@ body {
     flex-grow: 1;
     font-size: 1.4em;
     color: var(--accent-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .panel-toggle-btn {
@@ -283,10 +257,10 @@ body {
     font-size: 1.2em;
     transition: all 0.3s ease;
     flex-shrink: 0;
-    /* Impede que o botão encolha */
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-left: 10px;
 }
 
 .panel-toggle-btn:hover {
@@ -295,14 +269,16 @@ body {
     transform: scale(1.1);
 }
 
+/* Painel lateral recolhido */
 .left-panel.collapsed {
     width: 50px;
     min-width: 50px;
-    padding-left: 10px;
-    padding-right: 10px;
+    padding: 20px 5px;
+    align-items: center;
 }
 
 .left-panel.collapsed .redacoes-container,
+.left-panel.collapsed .documentos-container,
 .left-panel.collapsed .panel-header h2 {
     display: none;
 }
@@ -310,74 +286,58 @@ body {
 .left-panel.collapsed .panel-header {
     border-bottom: none;
     justify-content: center;
+    margin-bottom: 0;
+    padding: 0;
+    width: 100%;
 }
-
-/* ---------------------------------- */
-
-.redacao-item {
-    padding: 15px 40px 15px 15px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    background: rgba(0, 0, 0, 0.2);
-}
-
-.redacao-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 15px var(--border-color);
-    border-color: var(--accent-color);
-}
-
-.redacao-item.active {
-    border-left: 5px solid var(--accent-color);
-    background: rgba(0, 242, 234, 0.1);
-}
-
-.redacao-actions {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    gap: 8px;
-}
-
-.action-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2em;
-    opacity: 0.6;
-    transition: all 0.3s ease;
-    color: var(--text-light);
-}
-
-.action-btn:hover {
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-.delete-btn:hover {
-    color: var(--error-color);
-}
-
-.rename-btn:hover {
-    color: var(--accent-color);
-}
-
 
 /* --- Painel Central --- */
 .center-panel {
     flex: 1;
-    padding: 0 25px;
+    padding: 20px 25px;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     min-height: 0;
+    height: 100%;
 }
 
+/* --- ESTILOS ESPECÍFICOS DO SINAPSE --- */
+#rag-view .panel-header h1 {
+    margin: 0;
+    padding: 0;
+    border: none;
+    text-align: left;
+    flex-grow: 1;
+    font-size: 2em;
+    color: #fff;
+    text-shadow: 0 0 10px var(--accent-color);
+}
+
+#rag-view .view-subtitle {
+    font-size: 1.1em;
+    color: #aaa;
+    margin-left: 15px;
+    font-weight: normal;
+}
+
+#rag-view .input-section,
+#rag-view .question-section {
+    margin-bottom: 30px;
+}
+
+#rag-view .divider-section {
+    margin: 30px 0;
+}
+
+#rag-view .instruction-text {
+    text-align: center;
+    color: var(--text-light);
+    margin-top: 10px;
+    font-size: 1em;
+}
+
+/* --- ESTILOS COMPARTILHADOS --- */
 .input-toggle {
     display: flex;
     margin-bottom: 20px;
@@ -416,12 +376,10 @@ body {
     font-weight: 700;
 }
 
-/* === MODIFICAÇÃO PRINCIPAL AQUI === */
 .upload-area {
     border: 2px dashed var(--border-color);
     border-radius: 8px;
     padding: 40px;
-    /* Aumentado padding */
     text-align: center;
     margin-bottom: 20px;
     background: var(--glass-bg);
@@ -429,27 +387,21 @@ body {
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-
-    /* Novas regras para centralizar e organizar o conteúdo */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 180px;
-    /* Garante uma altura mínima */
 }
 
 .upload-area i {
     font-size: 48px;
-    /* Tamanho do ícone */
     margin-bottom: 15px;
-    /* Espaço entre o ícone e o título */
     color: var(--accent-color);
 }
 
 .upload-area h3 {
     margin-bottom: 8px;
-    /* Espaço entre o título e o texto */
 }
 
 .upload-area:hover {
@@ -466,7 +418,6 @@ textarea {
     display: none;
     width: 100%;
     height: 180px;
-    /* MODIFICADO */
     padding: 15px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -475,6 +426,12 @@ textarea {
     resize: vertical;
     background: rgba(0, 0, 0, 0.3);
     color: var(--text-light);
+}
+
+#rag-question-input {
+    display: block;
+    min-height: 120px;
+    margin-bottom: 15px;
 }
 
 .options-bar {
@@ -521,11 +478,7 @@ textarea {
 
 /* --- Área de Resultado --- */
 .result-area {
-    /* border: 1px solid var(--border-color); */
-    /* border-radius: 8px; */
     padding: 25px;
-    /* background: var(--glass-bg); */
-    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); */
     min-height: 200px;
     margin-bottom: 25px;
     display: flex;
@@ -534,11 +487,7 @@ textarea {
     line-height: 1.5;
 }
 
-/* --- NOVA REGRA PARA O CONTEÚDO DO RESULTADO --- */
-/* SUBSTITUA PELO BLOCO ABAIXO */
 #result-content {
-    /* As propriedades de altura fixa e overflow foram removidas 
-       para permitir que o container cresça com o conteúdo. */
     overflow-y: visible;
 }
 
@@ -563,31 +512,6 @@ textarea {
     z-index: 2001;
 }
 
-/* --- CORREÇÃO FORÇADA PARA O BOTÃO MAXIMIZAR --- */
-#toggle-maximize-btn {
-    background: none !important;
-    border: 1px solid var(--border-color) !important;
-    color: var(--text-light) !important;
-    cursor: pointer !important;
-    width: 30px !important;
-    height: 30px !important;
-    border-radius: 50% !important;
-    font-size: 1.2em !important;
-    transition: all 0.3s ease !important;
-    flex-shrink: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-#toggle-maximize-btn:hover {
-    background-color: var(--accent-color) !important;
-    color: var(--text-dark) !important;
-    transform: scale(1.1) !important;
-}
-
-/* ----------------------------- */
-
 .result-title {
     margin-bottom: 0;
     color: var(--accent-color);
@@ -597,27 +521,11 @@ textarea {
 
 .criteria-item {
     margin-bottom: 20px;
-    /* Adiciona espaço entre os blocos de critérios */
     padding: 20px;
-    /* Preenchimento interno para o conteúdo */
     background: rgba(36, 36, 62, 0.6);
-    /* Fundo um pouco mais escuro para destaque */
     border-radius: 8px;
-    /* Bordas arredondadas */
     border: 1px solid rgba(0, 242, 234, 0.2);
-    /* Adiciona uma borda sutil ao redor da caixa */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    /* Uma sombra leve para profundidade */
-}
-
-/* Remove o border-bottom do último item para não ter linha extra */
-.criteria-item:last-child {
-    margin-bottom: 0;
-    border-bottom: none;
-}
-
-.criteria-item:last-child {
-    border-bottom: none;
 }
 
 .criteria-header {
@@ -646,14 +554,11 @@ textarea {
     color: var(--text-light);
     white-space: pre-wrap;
     margin-top: 10px;
-    /* Garante que o texto comece abaixo do header */
     line-height: 1.6;
-    /* Melhora a legibilidade */
 }
 
 .total-score {
     margin: 25px 0;
-    /* ← 25px top/bottom, 0 left/right */
     padding: 20px;
     border-top: 2px solid var(--accent-color);
     font-size: 24px;
@@ -661,7 +566,6 @@ textarea {
     color: var(--accent-color);
     text-align: center;
     line-height: 1.5;
-    /* ← Melhora espaçamento entre linhas */
 }
 
 /* --- Utilitários --- */
@@ -697,7 +601,6 @@ textarea {
     display: none;
 }
 
-/* --- AJUSTE NO EMPTY STATE --- */
 .empty-state {
     text-align: center;
     padding: 40px;
@@ -716,36 +619,131 @@ textarea {
     opacity: 0.7;
 }
 
-/* --- Estilos da View RAG --- */
-#rag-view h1 {
-    font-size: 3em;
-    text-align: center;
-    color: #fff;
-    text-shadow: 0 0 10px var(--accent-color);
+/* --- Itens das listas --- */
+.redacao-item {
+    padding: 15px 40px 15px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    background: rgba(0, 0, 0, 0.2);
 }
 
-.view-subtitle {
-    text-align: center;
-    font-size: 1.1em;
-    color: #aaa;
-    margin-bottom: 25px;
+.redacao-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 15px var(--border-color);
+    border-color: var(--accent-color);
 }
 
-.divider {
-    width: 100%;
-    border: 0;
+.redacao-item.active {
+    border-left: 5px solid var(--accent-color);
+    background: rgba(0, 242, 234, 0.1);
+}
+
+.documento-item {
+    padding: 15px 40px 15px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.documento-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 15px var(--border-color);
+    border-color: var(--accent-color);
+}
+
+.documento-item.active {
+    border-left: 5px solid var(--accent-color);
+    background: rgba(0, 242, 234, 0.1);
+}
+
+.redacao-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    color: var(--text-light);
+}
+
+.action-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.delete-btn:hover {
+    color: var(--error-color);
+}
+
+.rename-btn:hover {
+    color: var(--accent-color);
+}
+
+.documento-perguntas {
+    margin-top: 10px;
+    padding-top: 10px;
     border-top: 1px solid var(--border-color);
-    margin: 30px 0;
 }
 
-#rag-result-area {
-    white-space: pre-wrap;
-    line-height: 1.7;
+.pergunta-item {
+    padding: 8px;
+    margin-bottom: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-/* CORREÇÃO: Aumentada a altura do campo de pergunta e adicionado espaçamento */
-#rag-question-input {
-    display: block;
-    min-height: 120px;
-    margin-bottom: 15px;
+.pergunta-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.pergunta-item.active {
+    background: rgba(0, 242, 234, 0.2);
+    border-left: 3px solid var(--accent-color);
+}
+
+/* Ajuste responsivo */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .left-panel {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+    }
+
+    .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #rag-view .view-subtitle {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+
+    .panel-toggle-btn {
+        margin-left: 0;
+        margin-top: 10px;
+    }
 }

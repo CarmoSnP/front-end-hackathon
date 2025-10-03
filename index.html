@@ -98,40 +98,76 @@
             </div>
 
             <div id="rag-view" class="app-view">
-                <div class="container" style="flex-direction: column; max-width: 900px; margin: 0 auto; padding: 20px;">
-                    <h1>Sinapse</h1>
-                    <p class="view-subtitle">A IA que dialoga com seus materiais de estudo.</p>
-
-                    <div class="upload-area" id="rag-upload-area">
-                        <i id="rag-upload-icon">📚</i>
-                        <h3 id="rag-upload-title">Adicionar Documento à Base de Conhecimento</h3>
-                        <p id="rag-upload-text">Arraste um arquivo (PDF, PPTX) aqui ou clique para selecionar</p>
-                        <input type="file" id="rag-file-input" style="display: none;" accept=".pdf,.pptx">
+                <div class="container">
+                    <!-- PAINEL LATERAL DO SINAPSE -->
+                    <div class="left-panel">
+                        <div class="panel-header">
+                            <h2>Meus Documentos (Sinapse)</h2>
+                            <button id="toggle-rag-sidebar-btn" class="panel-toggle-btn"
+                                title="Recolher Barra Lateral">‹</button>
+                        </div>
+                        <div class="documentos-container" id="documentos-list"></div>
                     </div>
-                    <div id="rag-files-list"></div>
-                    <button class="submit-btn" id="rag-upload-btn" style="margin-bottom: 20px;">Enviar Arquivo</button>
-                    <div class="loading" id="rag-upload-loading">
-                        <div class="spinner"></div>
-                        <p>Integrando conhecimento ao Sinapse...</p>
-                    </div>
-                    <div class="error-message" id="rag-upload-error-message"></div>
 
-                    <hr class="divider">
+                    <!-- CONTEÚDO PRINCIPAL DO SINAPSE -->
+                    <div class="center-panel">
+                        <div class="panel-header">
+                            <h1>Sinapse</h1>
+                            <span class="view-subtitle">A IA que dialoga com seus materiais de estudo.</span>
+                        </div>
 
-                    <p class="instruction-text">Faça uma pergunta sobre o documento enviado.</p>
-                    <textarea id="rag-question-input" placeholder="Digite sua pergunta aqui..."></textarea>
-                    <button class="submit-btn" id="rag-submit-btn" style="align-self: flex-end;">Enviar
-                        Pergunta</button>
+                        <div class="input-section">
+                            <div class="upload-area" id="rag-upload-area">
+                                <i id="rag-upload-icon">📚</i>
+                                <h3 id="rag-upload-title">Adicionar Documento à Base de Conhecimento</h3>
+                                <p id="rag-upload-text">Arraste um arquivo (PDF, PPTX) aqui ou clique para selecionar
+                                </p>
+                                <input type="file" id="rag-file-input" style="display: none;" accept=".pdf,.pptx">
+                            </div>
 
-                    <div class="loading" id="rag-loading">
-                        <div class="spinner"></div>
-                        <p>Consultando a base de conhecimento...</p>
-                    </div>
-                    <div class="error-message" id="rag-error-message"></div>
+                            <div id="rag-files-list"></div>
 
-                    <div class="result-area" id="rag-result-area">
-                        <div class="empty-state"><i>💡</i>
-                            <p>A resposta para sua pergunta aparecerá aqui.</p>
+                            <div class="options-bar">
+                                <button class="submit-btn" id="rag-upload-btn">Enviar Arquivo</button>
+                            </div>
+
+                            <div class="loading" id="rag-upload-loading">
+                                <div class="spinner"></div>
+                                <p>Integrando conhecimento ao Sinapse...</p>
+                            </div>
+                            <div class="error-message" id="rag-upload-error-message"></div>
+                        </div>
+
+                        <div class="divider-section">
+                            <hr class="divider">
+                            <p class="instruction-text">Faça uma pergunta sobre o documento enviado.</p>
+                        </div>
+
+                        <div class="question-section">
+                            <textarea id="rag-question-input" placeholder="Digite sua pergunta aqui..."></textarea>
+
+                            <div class="options-bar">
+                                <button class="submit-btn" id="rag-submit-btn">Enviar Pergunta</button>
+                            </div>
+
+                            <div class="loading" id="rag-loading">
+                                <div class="spinner"></div>
+                                <p>Consultando a base de conhecimento...</p>
+                            </div>
+                            <div class="error-message" id="rag-error-message"></div>
+                        </div>
+
+                        <div class="result-area" id="rag-result-area">
+                            <div class="panel-header">
+                                <h2 class="result-title">Resposta da Sinapse</h2>
+                                <button id="toggle-rag-maximize-btn" class="panel-toggle-btn"
+                                    title="Maximizar">⛶</button>
+                            </div>
+                            <div id="rag-result-content">
+                                <div class="empty-state"><i>💡</i>
+                                    <p>A resposta para sua pergunta aparecerá aqui.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

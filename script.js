@@ -20,13 +20,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleTextBtn = document.getElementById('toggle-text');
     const uploadContainer = document.getElementById('upload-container');
     const textInputArea = document.getElementById('text-input-area');
-    const resultArea = document.getElementById('result-area'); // Adicionado seletor
+    const resultArea = document.getElementById('result-area');
 
     // --- NOVOS ELEMENTOS DE CONTROLE DA UI ---
     const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
-    const leftPanel = document.querySelector('.left-panel');
+    const leftPanel = document.querySelector('#redacao-view .left-panel');
     const toggleMaximizeBtn = document.getElementById('toggle-maximize-btn');
-
 
     // --- RAG (SINAPSE) ELEMENTOS ---
     const ragSubmitBtn = document.getElementById('rag-submit-btn');
@@ -41,6 +40,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const ragUploadErrorMessage = document.getElementById('rag-upload-error-message');
     const ragFilesList = document.getElementById('rag-files-list');
 
+    // NOVOS ELEMENTOS DO SINAPSE
+    const documentosList = document.getElementById('documentos-list');
+    const ragResultContent = document.getElementById('rag-result-content');
+    const toggleRagSidebarBtn = document.getElementById('toggle-rag-sidebar-btn');
+    const toggleRagMaximizeBtn = document.getElementById('toggle-rag-maximize-btn');
+    const ragLeftPanel = document.querySelector('#rag-view .left-panel');
+
     // --- TABS ---
     const navTabs = document.querySelectorAll('.nav-tab');
     const appViews = document.querySelectorAll('.app-view');
@@ -48,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- ESTADO DA APLICAÇÃO ---
     let apiConfig = { url: 'https://hackathon-ufsc-ia.onrender.com' };
     let redacoesSalvas = JSON.parse(localStorage.getItem('redacoesSalvas')) || [];
+    let documentosSalvos = JSON.parse(localStorage.getItem('documentosSalvos')) || [];
     let currentInputMode = 'upload'; // 'upload' ou 'text'
 
     // --- FUNÇÕES DE LÓGICA ---
@@ -65,6 +72,10 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem('redacoesSalvas', JSON.stringify(redacoesSalvas));
     }
 
+    function salvarDocumentos() {
+        localStorage.setItem('documentosSalvos', JSON.stringify(documentosSalvos));
+    }
+
     function carregarRedacoes() {
         redacoesList.innerHTML = '';
         if (redacoesSalvas.length === 0) {
@@ -74,7 +85,6 @@ document.addEventListener('DOMContentLoaded', function () {
         redacoesSalvas.slice().reverse().forEach(redacao => {
             const item = document.createElement('div');
             item.className = 'redacao-item';
-            // MODIFICADO: Adicionado botão de renomear
             item.innerHTML = `<h3>${redacao.titulo}</h3><p>Data: ${redacao.data} | Nota: ${typeof redacao.nota === 'number' ? redacao.nota.toFixed(2) : redacao.nota}</p>
                             <div class="redacao-actions">
                                 <button class="action-btn rename-btn" title="Renomear" data-id="${redacao.id}">✏️</button>
@@ -82,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>`;
 
             item.addEventListener('click', (e) => {
-                // Modificado para não ativar ao clicar nos botões
                 if (!e.target.classList.contains('action-btn')) {
                     document.querySelectorAll('.redacao-item').forEach(el => el.classList.remove('active'));
                     item.classList.add('active');
@@ -97,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            // NOVO: Event listener para o botão de renomear
             item.querySelector('.rename-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
                 const newTitle = prompt("Digite o novo nome para a redação:", redacao.titulo);
@@ -106,12 +114,87 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (redacaoToUpdate) {
                         redacaoToUpdate.titulo = newTitle.trim();
                         salvarRedacoes();
-                        carregarRedacoes(); // Recarrega a lista para mostrar a alteração
+                        carregarRedacoes();
                     }
                 }
             });
 
             redacoesList.appendChild(item);
+        });
+    }
+
+    function carregarDocumentos() {
+        documentosList.innerHTML = '';
+        if (documentosSalvos.length === 0) {
+            documentosList.innerHTML = `<div class="empty-state"><i>📚</i><p>Nenhum documento salvo.</p></div>`;
+            return;
+        }
+
+        documentosSalvos.slice().reverse().forEach(documento => {
+            const item = document.createElement('div');
+            item.className = 'documento-item';
+
+            let perguntasHtml = '';
+            if (documento.perguntas && documento.perguntas.length > 0) {
+                perguntasHtml = `<div class="documento-perguntas">
+                    ${documento.perguntas.slice(-3).map(pergunta =>
+                    `<div class="pergunta-item" data-doc-id="${documento.id}" data-pergunta-id="${pergunta.id}">
+                            <strong>Q:</strong> ${pergunta.pergunta.substring(0, 50)}${pergunta.pergunta.length > 50 ? '...' : ''}
+                        </div>`
+                ).join('')}
+                </div>`;
+            }
+
+            item.innerHTML = `
+                <h3>${documento.titulo}</h3>
+                <p>Data: ${documento.data} | Arquivo: ${documento.arquivo}</p>
+                <p>Perguntas: ${documento.perguntas ? documento.perguntas.length : 0}</p>
+                ${perguntasHtml}
+                <div class="redacao-actions">
+                    <button class="action-btn rename-btn" title="Renomear" data-id="${documento.id}">✏️</button>
+                    <button class="action-btn delete-btn" title="Apagar" data-id="${documento.id}">🗑️</button>
+                </div>
+            `;
+
+            item.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('action-btn') && !e.target.classList.contains('pergunta-item')) {
+                    document.querySelectorAll('.documento-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                    exibirUltimaResposta(documento);
+                }
+            });
+
+            // Event listeners para as perguntas
+            item.querySelectorAll('.pergunta-item').forEach(perguntaEl => {
+                perguntaEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const docId = perguntaEl.getAttribute('data-doc-id');
+                    const perguntaId = perguntaEl.getAttribute('data-pergunta-id');
+                    exibirPerguntaResposta(docId, perguntaId);
+                });
+            });
+
+            item.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm('Tem certeza que deseja apagar este documento e todas as suas perguntas?')) {
+                    apagarDocumento(documento.id);
+                }
+            });
+
+            item.querySelector('.rename-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newTitle = prompt("Digite o novo nome para o documento:", documento.titulo);
+                if (newTitle && newTitle.trim() !== '') {
+                    const docToUpdate = documentosSalvos.find(d => d.id === documento.id);
+                    if (docToUpdate) {
+                        docToUpdate.titulo = newTitle.trim();
+                        salvarDocumentos();
+                        carregarDocumentos();
+                    }
+                }
+            });
+
+            documentosList.appendChild(item);
         });
     }
 
@@ -121,6 +204,60 @@ document.addEventListener('DOMContentLoaded', function () {
         carregarRedacoes();
         if (document.querySelector('.redacao-item.active') === null) {
             resultContent.innerHTML = `<div class="empty-state"><i>📝</i><p>Envie uma redação para ver o resultado aqui.</p></div>`;
+        }
+    }
+
+    function apagarDocumento(id) {
+        documentosSalvos = documentosSalvos.filter(documento => documento.id !== id);
+        salvarDocumentos();
+        carregarDocumentos();
+        if (document.querySelector('.documento-item.active') === null) {
+            ragResultContent.innerHTML = `<div class="empty-state"><i>💡</i><p>Selecione um documento ou faça uma pergunta.</p></div>`;
+        }
+    }
+
+    function exibirUltimaResposta(documento) {
+        if (documento.perguntas && documento.perguntas.length > 0) {
+            const ultimaPergunta = documento.perguntas[documento.perguntas.length - 1];
+            ragResultContent.innerHTML = `
+                <div class="criteria-item">
+                    <div class="criteria-header">
+                        <span class="criteria-name">Pergunta</span>
+                    </div>
+                    <p class="criteria-comment">${ultimaPergunta.pergunta}</p>
+                </div>
+                <div class="criteria-item">
+                    <div class="criteria-header">
+                        <span class="criteria-name">Resposta</span>
+                    </div>
+                    <p class="criteria-comment">${ultimaPergunta.resposta}</p>
+                </div>
+            `;
+        } else {
+            ragResultContent.innerHTML = `<div class="empty-state"><i>💡</i><p>Este documento ainda não tem perguntas. Faça uma pergunta acima!</p></div>`;
+        }
+    }
+
+    function exibirPerguntaResposta(docId, perguntaId) {
+        const documento = documentosSalvos.find(d => d.id == docId);
+        if (documento && documento.perguntas) {
+            const pergunta = documento.perguntas.find(p => p.id == perguntaId);
+            if (pergunta) {
+                ragResultContent.innerHTML = `
+                    <div class="criteria-item">
+                        <div class="criteria-header">
+                            <span class="criteria-name">Pergunta</span>
+                        </div>
+                        <p class="criteria-comment">${pergunta.pergunta}</p>
+                    </div>
+                    <div class="criteria-item">
+                        <div class="criteria-header">
+                            <span class="criteria-name">Resposta</span>
+                        </div>
+                        <p class="criteria-comment">${pergunta.resposta}</p>
+                    </div>
+                `;
+            }
         }
     }
 
@@ -147,10 +284,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function exibirResultado(resultado) {
-        if (resultado && resultado.competencias) { // ENEM
+        if (resultado && resultado.competencias) {
             let competenciasHtml = resultado.competencias.map(c => `<div class="criteria-item"><div class="criteria-header"><span class="criteria-name">Competência ${c.id}</span><span class="criteria-score">${c.nota}</span></div><p class="criteria-comment">${c.feedback}</p></div>`).join('');
             resultContent.innerHTML = `<div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${competenciasHtml}<div class="total-score">Nota Final: ${resultado.nota_final}</div>`;
-        } else if (resultado && resultado.criterios) { // UFSC
+        } else if (resultado && resultado.criterios) {
             let criteriosHtml = resultado.criterios.map(c => `<div class="criteria-item"><div class="criteria-header"><span class="criteria-name">${c.nome}</span><span class="criteria-score">${c.nota.toFixed(2)}</span></div><p class="criteria-comment">${c.feedback}</p></div>`).join('');
             resultContent.innerHTML = `<div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${criteriosHtml}<div class="total-score">Nota Final: ${resultado.nota_final.toFixed(2)}</div>`;
         } else {
@@ -161,38 +298,73 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- EVENT LISTENERS ---
 
-    // Lógica da Tela Inicial
-    enterAppBtn.addEventListener('click', () => {
-        splashScreen.classList.add('fade-out');
-        setTimeout(() => {
-            splashScreen.style.display = 'none';
-            appWrapper.style.display = 'flex';
-        }, 1000);
-    });
+    // CORREÇÃO: Lógica da Tela Inicial - Event Listener correto
+    if (enterAppBtn) {
+        enterAppBtn.addEventListener('click', () => {
+            console.log('Botão INICIAR clicado!');
+            splashScreen.classList.add('fade-out');
+            setTimeout(() => {
+                splashScreen.style.display = 'none';
+                appWrapper.style.display = 'flex';
+            }, 1000);
+        });
+    } else {
+        console.error('Botão enterAppBtn não encontrado!');
+    }
 
-    // --- NOVOS EVENT LISTENERS PARA CONTROLE DA UI ---
-    toggleSidebarBtn.addEventListener('click', () => {
-        leftPanel.classList.toggle('collapsed');
-        if (leftPanel.classList.contains('collapsed')) {
-            toggleSidebarBtn.textContent = '›';
-            toggleSidebarBtn.title = 'Expandir Barra Lateral';
-        } else {
-            toggleSidebarBtn.textContent = '‹';
-            toggleSidebarBtn.title = 'Recolher Barra Lateral';
-        }
-    });
+    // Controles da UI - Grifo
+    if (toggleSidebarBtn && leftPanel) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            leftPanel.classList.toggle('collapsed');
+            if (leftPanel.classList.contains('collapsed')) {
+                toggleSidebarBtn.textContent = '›';
+                toggleSidebarBtn.title = 'Expandir Barra Lateral';
+            } else {
+                toggleSidebarBtn.textContent = '‹';
+                toggleSidebarBtn.title = 'Recolher Barra Lateral';
+            }
+        });
+    }
 
-    toggleMaximizeBtn.addEventListener('click', () => {
-        resultArea.classList.toggle('maximized');
-        if (resultArea.classList.contains('maximized')) {
-            toggleMaximizeBtn.textContent = '✕';
-            toggleMaximizeBtn.title = 'Minimizar';
-        } else {
-            toggleMaximizeBtn.textContent = '⛶';
-            toggleMaximizeBtn.title = 'Maximizar';
-        }
-    });
-    // ----------------------------------------------------
+    if (toggleMaximizeBtn && resultArea) {
+        toggleMaximizeBtn.addEventListener('click', () => {
+            resultArea.classList.toggle('maximized');
+            if (resultArea.classList.contains('maximized')) {
+                toggleMaximizeBtn.textContent = '✕';
+                toggleMaximizeBtn.title = 'Minimizar';
+            } else {
+                toggleMaximizeBtn.textContent = '⛶';
+                toggleMaximizeBtn.title = 'Maximizar';
+            }
+        });
+    }
+
+    // Controles da UI - Sinapse
+    if (toggleRagSidebarBtn && ragLeftPanel) {
+        toggleRagSidebarBtn.addEventListener('click', () => {
+            ragLeftPanel.classList.toggle('collapsed');
+            if (ragLeftPanel.classList.contains('collapsed')) {
+                toggleRagSidebarBtn.textContent = '›';
+                toggleRagSidebarBtn.title = 'Expandir Barra Lateral';
+            } else {
+                toggleRagSidebarBtn.textContent = '‹';
+                toggleRagSidebarBtn.title = 'Recolher Barra Lateral';
+            }
+        });
+    }
+
+    if (toggleRagMaximizeBtn && ragResultArea) {
+        toggleRagMaximizeBtn.addEventListener('click', () => {
+            ragResultArea.classList.toggle('maximized');
+            if (ragResultArea.classList.contains('maximized')) {
+                toggleRagMaximizeBtn.textContent = '✕';
+                toggleRagMaximizeBtn.title = 'Minimizar';
+            } else {
+                toggleRagMaximizeBtn.textContent = '⛶';
+                toggleRagMaximizeBtn.title = 'Maximizar';
+            }
+        });
+    }
 
     // Navegação por Abas
     navTabs.forEach(tab => {
@@ -204,231 +376,306 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    toggleUploadBtn.addEventListener('click', () => {
-        currentInputMode = 'upload';
-        toggleUploadBtn.classList.add('active');
-        toggleTextBtn.classList.remove('active');
-        uploadContainer.style.display = 'block';
-        textInputArea.style.display = 'none';
-    });
+    // Grifo - Modo de entrada
+    if (toggleUploadBtn && toggleTextBtn) {
+        toggleUploadBtn.addEventListener('click', () => {
+            currentInputMode = 'upload';
+            toggleUploadBtn.classList.add('active');
+            toggleTextBtn.classList.remove('active');
+            uploadContainer.style.display = 'block';
+            textInputArea.style.display = 'none';
+        });
 
-    toggleTextBtn.addEventListener('click', () => {
-        currentInputMode = 'text';
-        toggleTextBtn.classList.add('active');
-        toggleUploadBtn.classList.remove('active');
-        uploadContainer.style.display = 'none';
-        textInputArea.style.display = 'block';
-    });
+        toggleTextBtn.addEventListener('click', () => {
+            currentInputMode = 'text';
+            toggleTextBtn.classList.add('active');
+            toggleUploadBtn.classList.remove('active');
+            uploadContainer.style.display = 'none';
+            textInputArea.style.display = 'block';
+        });
+    }
 
-    modelSelect.addEventListener('change', () => {
-        ufscGenreInput.style.display = (modelSelect.value === 'ufsc') ? 'block' : 'none';
-    });
+    if (modelSelect) {
+        modelSelect.addEventListener('change', () => {
+            if (ufscGenreInput) {
+                ufscGenreInput.style.display = (modelSelect.value === 'ufsc') ? 'block' : 'none';
+            }
+        });
+    }
 
-    uploadArea.addEventListener('click', () => fileInput.click());
-    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--accent-color)'; });
-    uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border-color)'; });
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.style.borderColor = 'var(--border-color)';
-        if (e.dataTransfer.files.length) {
-            fileInput.files = e.dataTransfer.files;
-            handleFileSelect(e.dataTransfer.files[0]);
-        }
-    });
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length) handleFileSelect(fileInput.files[0]);
-    });
+    // Grifo - Upload
+    if (uploadArea && fileInput) {
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--accent-color)'; });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border-color)'; });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--border-color)';
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) handleFileSelect(fileInput.files[0]);
+        });
+    }
 
-    submitBtn.addEventListener('click', async () => {
-        const selectedModel = modelSelect.value;
-        if (!apiConfig.url) {
-            showError('URL da API não configurada. Configure no campo acima.');
-            return;
-        }
+    // Grifo - Envio
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+            const selectedModel = modelSelect.value;
+            if (!apiConfig.url) {
+                showError('URL da API não configurada.');
+                return;
+            }
 
-        let requestBody;
-        let endpoint = '';
-        let headers = {};
+            let requestBody;
+            let endpoint = '';
+            let headers = {};
 
-        if (currentInputMode === 'upload') {
-            const file = fileInput.files[0];
-            if (!file) { showError('Por favor, faça o upload de uma imagem da redação.'); return; }
-            requestBody = new FormData();
-            requestBody.append('foto', file);
-            if (selectedModel === 'enem') {
-                endpoint = '/redacao/corrigir-redacao-enem/';
+            if (currentInputMode === 'upload') {
+                const file = fileInput.files[0];
+                if (!file) { showError('Por favor, faça o upload de uma imagem da redação.'); return; }
+                requestBody = new FormData();
+                requestBody.append('foto', file);
+                if (selectedModel === 'enem') {
+                    endpoint = '/redacao/corrigir-redacao-enem/';
+                } else {
+                    const genero = ufscGenreInput.value.trim();
+                    if (!genero) { showError('Por favor, informe o gênero textual para a correção da UFSC.'); return; }
+                    requestBody.append('genero', genero);
+                    endpoint = '/redacao/corrigir-redacao-ufsc/';
+                }
             } else {
-                const genero = ufscGenreInput.value.trim();
-                if (!genero) { showError('Por favor, informe o gênero textual para a correção da UFSC.'); return; }
-                requestBody.append('genero', genero);
-                endpoint = '/redacao/corrigir-redacao-ufsc/';
-            }
-        } else { // modo 'text'
-            const texto = textInputArea.value.trim();
-            if (!texto) { showError('Por favor, digite o texto da redação.'); return; }
-            headers = { 'Content-Type': 'application/json' };
-            if (selectedModel === 'enem') {
-                endpoint = '/redacao/corrigir-texto-enem/';
-                requestBody = JSON.stringify({ texto: texto });
-            } else {
-                const genero = ufscGenreInput.value.trim();
-                if (!genero) { showError('Por favor, informe o gênero textual para a correção da UFSC.'); return; }
-                endpoint = '/redacao/corrigir-texto-ufsc/';
-                requestBody = JSON.stringify({ texto: texto, genero: genero });
-            }
-        }
-
-        const fullApiUrl = apiConfig.url + endpoint;
-        submitBtn.disabled = true;
-        loading.style.display = 'block';
-        errorMessage.style.display = 'none';
-        resultContent.innerHTML = `<div class="empty-state"><i>📝</i><p>Aguardando resultado...</p></div>`;
-
-        try {
-            const response = await fetch(fullApiUrl, { method: 'POST', headers: headers, body: requestBody });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `Erro na API: ${response.status}`);
-            }
-            const resultado = await response.json();
-
-            const novaRedacao = {
-                id: Date.now(),
-                titulo: `Grifo (${selectedModel.toUpperCase()}) de ${new Date().toLocaleDateString()}`,
-                data: new Date().toLocaleDateString(),
-                nota: resultado.nota_final || 0,
-                resultado: resultado,
-                tipo: selectedModel
-            };
-
-            redacoesSalvas.push(novaRedacao);
-            salvarRedacoes();
-            carregarRedacoes();
-            exibirResultado(resultado);
-
-            const primeiroItem = redacoesList.querySelector('.redacao-item');
-            if (primeiroItem) {
-                document.querySelectorAll('.redacao-item').forEach(el => el.classList.remove('active'));
-                primeiroItem.classList.add('active');
+                const texto = textInputArea.value.trim();
+                if (!texto) { showError('Por favor, digite o texto da redação.'); return; }
+                headers = { 'Content-Type': 'application/json' };
+                if (selectedModel === 'enem') {
+                    endpoint = '/redacao/corrigir-texto-enem/';
+                    requestBody = JSON.stringify({ texto: texto });
+                } else {
+                    const genero = ufscGenreInput.value.trim();
+                    if (!genero) { showError('Por favor, informe o gênero textual para a correção da UFSC.'); return; }
+                    endpoint = '/redacao/corrigir-texto-ufsc/';
+                    requestBody = JSON.stringify({ texto: texto, genero: genero });
+                }
             }
 
-        } catch (error) {
-            showError(`Erro ao processar: ${error.message}`);
-            console.error('Erro detalhado:', error);
-            resultContent.innerHTML = `<div class="empty-state"><i>❌</i><p>Ocorreu um erro.</p></div>`;
-        } finally {
-            submitBtn.disabled = false;
-            loading.style.display = 'none';
-        }
-    });
+            const fullApiUrl = apiConfig.url + endpoint;
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            errorMessage.style.display = 'none';
+            resultContent.innerHTML = `<div class="empty-state"><i>📝</i><p>Aguardando resultado...</p></div>`;
 
-    // --- RAG (Sinapse) EVENT LISTENERS ---
+            try {
+                const response = await fetch(fullApiUrl, { method: 'POST', headers: headers, body: requestBody });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `Erro na API: ${response.status}`);
+                }
+                const resultado = await response.json();
 
-    ragUploadArea.addEventListener('click', () => ragFileInput.click());
-    ragUploadArea.addEventListener('dragover', (e) => { e.preventDefault(); ragUploadArea.style.borderColor = 'var(--accent-color)'; });
-    ragUploadArea.addEventListener('dragleave', () => { ragUploadArea.style.borderColor = 'var(--border-color)'; });
-    ragUploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        ragUploadArea.style.borderColor = 'var(--border-color)';
-        if (e.dataTransfer.files.length) {
-            ragFileInput.files = e.dataTransfer.files;
-            updateRagFilesList();
-        }
-    });
-    ragFileInput.addEventListener('change', updateRagFilesList);
+                const novaRedacao = {
+                    id: Date.now(),
+                    titulo: `Grifo (${selectedModel.toUpperCase()}) de ${new Date().toLocaleDateString()}`,
+                    data: new Date().toLocaleDateString(),
+                    nota: resultado.nota_final || 0,
+                    resultado: resultado,
+                    tipo: selectedModel
+                };
 
-    ragUploadBtn.addEventListener('click', async () => {
-        if (!apiConfig.url) {
-            showError('URL da API não configurada.', 'rag-upload');
-            return;
-        }
-        const file = ragFileInput.files[0];
-        if (!file) {
-            showError('Por favor, selecione um arquivo para enviar.', 'rag-upload');
-            return;
-        }
+                redacoesSalvas.push(novaRedacao);
+                salvarRedacoes();
+                carregarRedacoes();
+                exibirResultado(resultado);
 
-        const formData = new FormData();
-        formData.append('file', file);
+                const primeiroItem = redacoesList.querySelector('.redacao-item');
+                if (primeiroItem) {
+                    document.querySelectorAll('.redacao-item').forEach(el => el.classList.remove('active'));
+                    primeiroItem.classList.add('active');
+                }
 
-        const endpoint = '/rag/upload';
-        const fullApiUrl = apiConfig.url + endpoint;
+            } catch (error) {
+                showError(`Erro ao processar: ${error.message}`);
+                console.error('Erro detalhado:', error);
+                resultContent.innerHTML = `<div class="empty-state"><i>❌</i><p>Ocorreu um erro.</p></div>`;
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+    }
 
-        ragUploadBtn.disabled = true;
-        ragUploadLoading.style.display = 'block';
-        ragUploadErrorMessage.style.display = 'none';
+    // Sinapse - Upload
+    if (ragUploadArea && ragFileInput) {
+        ragUploadArea.addEventListener('click', () => ragFileInput.click());
+        ragUploadArea.addEventListener('dragover', (e) => { e.preventDefault(); ragUploadArea.style.borderColor = 'var(--accent-color)'; });
+        ragUploadArea.addEventListener('dragleave', () => { ragUploadArea.style.borderColor = 'var(--border-color)'; });
+        ragUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            ragUploadArea.style.borderColor = 'var(--border-color)';
+            if (e.dataTransfer.files.length) {
+                ragFileInput.files = e.dataTransfer.files;
+                updateRagFilesList();
+            }
+        });
+        ragFileInput.addEventListener('change', updateRagFilesList);
+    }
 
-        try {
-            const response = await fetch(fullApiUrl, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `Erro no upload: ${response.status}`);
+    if (ragUploadBtn) {
+        ragUploadBtn.addEventListener('click', async () => {
+            if (!apiConfig.url) {
+                showError('URL da API não configurada.', 'rag-upload');
+                return;
+            }
+            const file = ragFileInput.files[0];
+            if (!file) {
+                showError('Por favor, selecione um arquivo para enviar.', 'rag-upload');
+                return;
             }
 
-            const result = await response.json();
-            alert(result.message || 'Arquivo enviado com sucesso!');
-            ragFileInput.value = '';
-            updateRagFilesList();
+            const formData = new FormData();
+            formData.append('file', file);
 
-        } catch (error) {
-            showError(`Erro ao enviar: ${error.message}`, 'rag-upload');
-            console.error('Erro detalhado no upload do RAG:', error);
-        } finally {
-            ragUploadBtn.disabled = false;
-            ragUploadLoading.style.display = 'none';
-        }
-    });
+            const endpoint = '/rag/upload';
+            const fullApiUrl = apiConfig.url + endpoint;
 
+            ragUploadBtn.disabled = true;
+            ragUploadLoading.style.display = 'block';
+            ragUploadErrorMessage.style.display = 'none';
 
-    ragSubmitBtn.addEventListener('click', async () => {
-        const pergunta = ragQuestionInput.value.trim();
-        if (!apiConfig.url) {
-            showError('URL da API não configurada.', 'rag');
-            return;
-        }
-        if (!pergunta) {
-            showError('Por favor, digite uma pergunta.', 'rag');
-            return;
-        }
+            try {
+                const response = await fetch(fullApiUrl, {
+                    method: 'POST',
+                    body: formData
+                });
 
-        const endpoint = '/rag/query';
-        const fullApiUrl = apiConfig.url + endpoint;
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `Erro no upload: ${response.status}`);
+                }
 
-        ragSubmitBtn.disabled = true;
-        ragLoading.style.display = 'block';
-        ragErrorMessage.style.display = 'none';
-        ragResultArea.innerHTML = `<div class="empty-state"><i>💡</i><p>Processando...</p></div>`;
+                const result = await response.json();
 
-        try {
-            const response = await fetch(fullApiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: pergunta })
-            });
+                // Salvar documento no histórico
+                const novoDocumento = {
+                    id: Date.now(),
+                    titulo: `Documento de ${new Date().toLocaleDateString()}`,
+                    data: new Date().toLocaleDateString(),
+                    arquivo: file.name,
+                    perguntas: []
+                };
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `Erro na API: ${response.status}`);
+                documentosSalvos.push(novoDocumento);
+                salvarDocumentos();
+                carregarDocumentos();
+
+                alert(result.message || 'Arquivo enviado com sucesso!');
+                ragFileInput.value = '';
+                updateRagFilesList();
+
+            } catch (error) {
+                showError(`Erro ao enviar: ${error.message}`, 'rag-upload');
+                console.error('Erro detalhado no upload do RAG:', error);
+            } finally {
+                ragUploadBtn.disabled = false;
+                ragUploadLoading.style.display = 'none';
+            }
+        });
+    }
+
+    // Sinapse - Perguntas
+    if (ragSubmitBtn) {
+        ragSubmitBtn.addEventListener('click', async () => {
+            const pergunta = ragQuestionInput.value.trim();
+            if (!apiConfig.url) {
+                showError('URL da API não configurada.', 'rag');
+                return;
+            }
+            if (!pergunta) {
+                showError('Por favor, digite uma pergunta.', 'rag');
+                return;
             }
 
-            const resultado = await response.json();
-            ragResultArea.innerHTML = resultado.answer || "Não foi possível obter uma resposta.";
+            // Verificar se há documentos salvos
+            if (documentosSalvos.length === 0) {
+                showError('Por favor, envie um documento primeiro.', 'rag');
+                return;
+            }
 
-        } catch (error) {
-            showError(`Erro ao processar: ${error.message}`, 'rag');
-            console.error('Erro detalhado no RAG:', error);
-            ragResultArea.innerHTML = `<div class="empty-state"><i>❌</i><p>Ocorreu um erro ao buscar a resposta.</p></div>`;
-        } finally {
-            ragSubmitBtn.disabled = false;
-            ragLoading.style.display = 'none';
-        }
-    });
+            const endpoint = '/rag/query';
+            const fullApiUrl = apiConfig.url + endpoint;
 
+            ragSubmitBtn.disabled = true;
+            ragLoading.style.display = 'block';
+            ragErrorMessage.style.display = 'none';
+            ragResultContent.innerHTML = `<div class="empty-state"><i>💡</i><p>Processando...</p></div>`;
+
+            try {
+                const response = await fetch(fullApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: pergunta })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `Erro na API: ${response.status}`);
+                }
+
+                const resultado = await response.json();
+                const resposta = resultado.answer || "Não foi possível obter uma resposta.";
+
+                // Salvar pergunta e resposta no último documento
+                const ultimoDocumento = documentosSalvos[documentosSalvos.length - 1];
+                const novaPergunta = {
+                    id: Date.now(),
+                    pergunta: pergunta,
+                    resposta: resposta,
+                    data: new Date().toLocaleString()
+                };
+
+                if (!ultimoDocumento.perguntas) {
+                    ultimoDocumento.perguntas = [];
+                }
+                ultimoDocumento.perguntas.push(novaPergunta);
+                salvarDocumentos();
+                carregarDocumentos();
+
+                // Exibir resultado
+                ragResultContent.innerHTML = `
+                    <div class="criteria-item">
+                        <div class="criteria-header">
+                            <span class="criteria-name">Pergunta</span>
+                        </div>
+                        <p class="criteria-comment">${pergunta}</p>
+                    </div>
+                    <div class="criteria-item">
+                        <div class="criteria-header">
+                            <span class="criteria-name">Resposta</span>
+                        </div>
+                        <p class="criteria-comment">${resposta}</p>
+                    </div>
+                `;
+
+                // Limpar campo de pergunta
+                ragQuestionInput.value = '';
+
+            } catch (error) {
+                showError(`Erro ao processar: ${error.message}`, 'rag');
+                console.error('Erro detalhado no RAG:', error);
+                ragResultContent.innerHTML = `<div class="empty-state"><i>❌</i><p>Ocorreu um erro ao buscar a resposta.</p></div>`;
+            } finally {
+                ragSubmitBtn.disabled = false;
+                ragLoading.style.display = 'none';
+            }
+        });
+    }
 
     // --- INICIALIZAÇÃO ---
     carregarRedacoes();
+    carregarDocumentos();
+
+    console.log('Aplicação Cognita carregada com sucesso!');
 });
