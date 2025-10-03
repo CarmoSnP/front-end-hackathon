@@ -28,11 +28,54 @@
             background-color: var(--light-color);
             color: var(--dark-color);
             line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .main-nav {
+            background-color: white;
+            padding: 0 20px;
+            border-bottom: 2px solid var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-tabs {
+            display: flex;
+        }
+
+        .nav-tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 18px;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+            border-bottom: 4px solid transparent;
+        }
+
+        .nav-tab.active {
+            color: var(--dark-color);
+            border-bottom: 4px solid var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .app-view {
+            display: none;
+        }
+
+        .app-view.active {
+            display: flex;
+            flex-grow: 1;
         }
 
         .container {
             display: flex;
-            min-height: 100vh;
+            width: 100%;
+            flex-grow: 1;
         }
 
         .left-panel {
@@ -297,68 +340,151 @@
         .empty-state { text-align: center; padding: 30px; color: #666; }
         .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; }
 
-        .api-config { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; }
-        .api-config h3 { margin-bottom: 10px; font-size: 16px; }
+        .api-config { padding: 15px; background-color: #f8f9fa; border-radius: 5px; }
         .api-config input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 5px; margin-bottom: 10px; }
         .api-config button { padding: 8px 15px; background-color: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+        /* RAG View Styles */
+        #rag-view {
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        #rag-view h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #rag-question-input {
+            width: 100%;
+            height: 100px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            resize: vertical;
+        }
+        #rag-result-area {
+             flex-grow: 1;
+             background-color: white;
+             border: 1px solid var(--border-color);
+             border-radius: 8px;
+             padding: 20px;
+             margin-top: 20px;
+             overflow-y: auto;
+             white-space: pre-wrap; /* Preserve formatting */
+        }
+        
+        #rag-files-list {
+            margin-top: -10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .file-item {
+            padding: 5px 8px;
+            background-color: #e8f0fe;
+            border-radius: 3px;
+            margin-bottom: 5px;
+            border: 1px solid var(--secondary-color);
+            display: block;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="left-panel">
-            <h2>Minhas Redações</h2>
-            <div class="redacoes-container" id="redacoes-list"></div>
+    <div class="main-nav">
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-view="redacao-view">Corretor de Redação</button>
+            <button class="nav-tab" data-view="rag-view">Tira-dúvidas (RAG)</button>
         </div>
-
-        <div class="center-panel">
-            <div class="input-toggle">
-                <button class="toggle-btn active" id="toggle-upload">Upload de Imagem</button>
-                <button class="toggle-btn" id="toggle-text">Digitar Texto</button>
-            </div>
-            
-            <div id="upload-container">
-                <div class="upload-area" id="upload-area">
-                    <i id="upload-icon">📄</i>
-                    <h3 id="upload-title">Fazer upload de uma redação</h3>
-                    <p id="upload-text">Arraste um arquivo de imagem aqui ou clique para selecionar</p>
-                    <input type="file" id="file-input" accept="image/*" style="display: none;">
-                </div>
-            </div>
-
-            <textarea id="text-input-area" placeholder="Cole ou digite sua redação aqui..."></textarea>
-            
-            <div class="options-bar">
-                <div class="options-left">
-                    <select class="model-select" id="model-select">
-                        <option value="enem">Redação ENEM</option>
-                        <option value="ufsc">Redação UFSC</option>
-                    </select>
-                    <input type="text" id="ufsc-genre-input" placeholder="Gênero (ex: Conto)" style="display: none;">
-                </div>
-                <button class="submit-btn" id="submit-btn">Enviar para Correção</button>
-            </div>
-
-            <div class="loading" id="loading"><div class="spinner"></div><p>Corrigindo... Isso pode levar alguns segundos.</p></div>
-            <div class="error-message" id="error-message"></div>
-
-            <div class="result-area" id="result-area">
-                <h2 class="result-title">Resultado da Correção</h2>
-                <div id="result-content">
-                    <div class="empty-state"><i>📝</i><p>Envie uma redação para ver o resultado aqui.</p></div>
-                </div>
-            </div>
+        <div class="api-config">
+             <input type="text" id="api-url" placeholder="URL da API: http://127.0.0.1:8000">
+             <button id="save-api-config">Salvar</button>
         </div>
+    </div>
 
-        <div class="right-panel">
-            <h2>Configurações</h2>
-            <div class="api-config">
-                <h3>URL Base da API</h3>
-                <input type="text" id="api-url" placeholder="ex: http://127.0.0.1:8000">
-                <button id="save-api-config">Salvar Configuração</button>
+    <div id="redacao-view" class="app-view active">
+        <div class="container">
+            <div class="left-panel">
+                <h2>Minhas Redações</h2>
+                <div class="redacoes-container" id="redacoes-list"></div>
+            </div>
+
+            <div class="center-panel">
+                <div class="input-toggle">
+                    <button class="toggle-btn active" id="toggle-upload">Upload de Imagem</button>
+                    <button class="toggle-btn" id="toggle-text">Digitar Texto</button>
+                </div>
+                
+                <div id="upload-container">
+                    <div class="upload-area" id="upload-area">
+                        <i id="upload-icon">📄</i>
+                        <h3 id="upload-title">Fazer upload de uma redação</h3>
+                        <p id="upload-text">Arraste um arquivo de imagem aqui ou clique para selecionar</p>
+                        <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+
+                <textarea id="text-input-area" placeholder="Cole ou digite sua redação aqui..."></textarea>
+                
+                <div class="options-bar">
+                    <div class="options-left">
+                        <select class="model-select" id="model-select">
+                            <option value="enem">Redação ENEM</option>
+                            <option value="ufsc">Redação UFSC</option>
+                        </select>
+                        <input type="text" id="ufsc-genre-input" placeholder="Gênero (ex: Conto)" style="display: none;">
+                    </div>
+                    <button class="submit-btn" id="submit-btn">Enviar para Correção</button>
+                </div>
+
+                <div class="loading" id="loading"><div class="spinner"></div><p>Corrigindo... Isso pode levar alguns segundos.</p></div>
+                <div class="error-message" id="error-message"></div>
+
+                <div class="result-area" id="result-area">
+                    <h2 class="result-title">Resultado da Correção</h2>
+                    <div id="result-content">
+                        <div class="empty-state"><i>📝</i><p>Envie uma redação para ver o resultado aqui.</p></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <div id="rag-view" class="app-view">
+         <div class="container" style="flex-direction: column; max-width: 900px; margin: 0 auto; padding: 20px;">
+                <h1>Tira-dúvidas com RAG</h1>
+                
+                <div class="upload-area" id="rag-upload-area">
+                    <i id="rag-upload-icon">📚</i>
+                    <h3 id="rag-upload-title">Adicionar Documento à Base de Conhecimento</h3>
+                    <p id="rag-upload-text">Arraste um arquivo (PDF, PPTX) aqui ou clique para selecionar</p>
+                    <input type="file" id="rag-file-input" style="display: none;" accept=".pdf,.pptx">
+                </div>
+                <div id="rag-files-list"></div>
+                <button class="submit-btn" id="rag-upload-btn" style="margin-bottom: 20px;">Enviar Arquivo</button>
+                <div class="loading" id="rag-upload-loading"><div class="spinner"></div><p>Enviando arquivo...</p></div>
+                <div class="error-message" id="rag-upload-error-message"></div>
+
+                <hr style="width:100%; border:0; border-top:1px solid var(--border-color); margin: 20px 0;">
+
+                <p style="text-align: center; margin-bottom: 15px;">Faça uma pergunta sobre o documento enviado.</p>
+                <textarea id="rag-question-input" placeholder="Digite sua pergunta aqui..."></textarea>
+                <button class="submit-btn" id="rag-submit-btn" style="align-self: flex-end;">Enviar Pergunta</button>
+                
+                <div class="loading" id="rag-loading"><div class="spinner"></div><p>Processando sua pergunta...</p></div>
+                <div class="error-message" id="rag-error-message"></div>
+                
+                <div class="result-area" id="rag-result-area">
+                    <div class="empty-state"><i>💡</i><p>A resposta para sua pergunta aparecerá aqui.</p></div>
+                </div>
+         </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -381,6 +507,23 @@
             const uploadContainer = document.getElementById('upload-container');
             const textInputArea = document.getElementById('text-input-area');
 
+            // --- RAG ELEMENTOS ---
+            const ragSubmitBtn = document.getElementById('rag-submit-btn');
+            const ragQuestionInput = document.getElementById('rag-question-input');
+            const ragLoading = document.getElementById('rag-loading');
+            const ragErrorMessage = document.getElementById('rag-error-message');
+            const ragResultArea = document.getElementById('rag-result-area');
+            const ragUploadArea = document.getElementById('rag-upload-area');
+            const ragFileInput = document.getElementById('rag-file-input');
+            const ragUploadBtn = document.getElementById('rag-upload-btn');
+            const ragUploadLoading = document.getElementById('rag-upload-loading');
+            const ragUploadErrorMessage = document.getElementById('rag-upload-error-message');
+            const ragFilesList = document.getElementById('rag-files-list');
+
+            // --- TABS ---
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const appViews = document.querySelectorAll('.app-view');
+
             // --- ESTADO DA APLICAÇÃO ---
             let apiConfig = JSON.parse(localStorage.getItem('apiConfig')) || { url: '' };
             apiUrlInput.value = apiConfig.url;
@@ -388,9 +531,14 @@
             let currentInputMode = 'upload'; // 'upload' ou 'text'
 
             // --- FUNÇÕES DE LÓGICA ---
-            function showError(mensagem) {
-                errorMessage.textContent = mensagem;
-                errorMessage.style.display = 'block';
+            function showError(mensagem, type = 'redacao') {
+                let el;
+                if (type === 'rag') el = ragErrorMessage;
+                else if (type === 'rag-upload') el = ragUploadErrorMessage;
+                else el = errorMessage;
+
+                el.textContent = mensagem;
+                el.style.display = 'block';
             }
 
             function salvarRedacoes() {
@@ -443,14 +591,28 @@
                     uploadArea.classList.add('file-selected');
                 }
             }
+            
+            function updateRagFilesList() {
+                ragFilesList.innerHTML = '';
+                const file = ragFileInput.files[0];
+                if (!file) {
+                    ragUploadArea.classList.remove('file-selected');
+                    ragUploadArea.querySelector('h3').textContent = 'Adicionar Documento à Base de Conhecimento';
+                    ragUploadArea.querySelector('p').textContent = 'Arraste um arquivo (PDF, PPTX) aqui ou clique para selecionar';
+                    return;
+                }
+                ragUploadArea.classList.add('file-selected');
+                ragUploadArea.querySelector('h3').textContent = 'Arquivo Selecionado';
+                ragUploadArea.querySelector('p').textContent = file.name;
+            }
 
             function exibirResultado(resultado) {
                 if (resultado && resultado.competencias) { // ENEM
                     let competenciasHtml = resultado.competencias.map(c => `<div class="criteria-item"><div class="criteria-header"><span class="criteria-name">Competência ${c.id}</span><span class="criteria-score">${c.nota}</span></div><p class="criteria-comment">${c.feedback}</p></div>`).join('');
-                    resultContent.innerHTML = `<div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${competenciasHtml}<div class="total-score">Nota Final: ${resultado.nota_final}</div>`;
+                    resultContent.innerHTML = `<h2 class="result-title">Resultado da Correção</h2><div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${competenciasHtml}<div class="total-score">Nota Final: ${resultado.nota_final}</div>`;
                 } else if (resultado && resultado.criterios) { // UFSC
                     let criteriosHtml = resultado.criterios.map(c => `<div class="criteria-item"><div class="criteria-header"><span class="criteria-name">${c.nome}</span><span class="criteria-score">${c.nota.toFixed(2)}</span></div><p class="criteria-comment">${c.feedback}</p></div>`).join('');
-                     resultContent.innerHTML = `<div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${criteriosHtml}<div class="total-score">Nota Final: ${resultado.nota_final.toFixed(2)}</div>`;
+                     resultContent.innerHTML = `<h2 class="result-title">Resultado da Correção</h2><div class="criteria-item"><div class="criteria-name">Análise Geral</div><p class="criteria-comment">${resultado.analise_geral}</p></div>${criteriosHtml}<div class="total-score">Nota Final: ${resultado.nota_final.toFixed(2)}</div>`;
                 } else {
                     resultContent.innerHTML = `<div class="error-message" style="display:block;">Resposta da API em formato inválido.</div>`;
                     console.error("Resposta inválida:", resultado);
@@ -458,6 +620,18 @@
             }
             
             // --- EVENT LISTENERS ---
+
+            // Tab Navigation
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    navTabs.forEach(t => t.classList.remove('active'));
+                    appViews.forEach(v => v.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.view).classList.add('active');
+                });
+            });
+
 
             toggleUploadBtn.addEventListener('click', () => {
                 currentInputMode = 'upload';
@@ -505,7 +679,7 @@
             submitBtn.addEventListener('click', async () => {
                 const selectedModel = modelSelect.value;
                 if (!apiConfig.url) {
-                    showError('URL da API não configurada. Configure no painel direito.');
+                    showError('URL da API não configurada. Configure no campo acima.');
                     return;
                 }
 
@@ -515,40 +689,28 @@
                 
                 if (currentInputMode === 'upload') {
                     const file = fileInput.files[0];
-                    if (!file) {
-                        showError('Por favor, faça o upload de uma imagem da redação.');
-                        return;
-                    }
+                    if (!file) { showError('Por favor, faça o upload de uma imagem da redação.'); return; }
                     requestBody = new FormData();
                     requestBody.append('foto', file);
                     if (selectedModel === 'enem') {
-                        endpoint = '/corrigir-redacao-enem/';
-                    } else { // UFSC
+                        endpoint = '/redacao/corrigir-redacao-enem/';
+                    } else {
                         const genero = ufscGenreInput.value.trim();
-                        if (!genero) {
-                            showError('Por favor, informe o gênero textual para a correção da UFSC.');
-                            return;
-                        }
+                        if (!genero) { showError('Por favor, informe o gênero textual para a correção da UFSC.'); return; }
                         requestBody.append('genero', genero);
-                        endpoint = '/corrigir-redacao-ufsc/';
+                        endpoint = '/redacao/corrigir-redacao-ufsc/';
                     }
                 } else { // modo 'text'
                     const texto = textInputArea.value.trim();
-                    if (!texto) {
-                        showError('Por favor, digite o texto da redação.');
-                        return;
-                    }
+                    if (!texto) { showError('Por favor, digite o texto da redação.'); return; }
                     headers = { 'Content-Type': 'application/json' };
                     if (selectedModel === 'enem') {
-                        endpoint = '/corrigir-texto-enem/';
+                        endpoint = '/redacao/corrigir-texto-enem/';
                         requestBody = JSON.stringify({ texto: texto });
-                    } else { // UFSC
+                    } else {
                         const genero = ufscGenreInput.value.trim();
-                        if (!genero) {
-                            showError('Por favor, informe o gênero textual para a correção da UFSC.');
-                            return;
-                        }
-                        endpoint = '/corrigir-texto-ufsc/';
+                        if (!genero) { showError('Por favor, informe o gênero textual para a correção da UFSC.'); return; }
+                        endpoint = '/redacao/corrigir-texto-ufsc/';
                         requestBody = JSON.stringify({ texto: texto, genero: genero });
                     }
                 }
@@ -596,6 +758,119 @@
                     loading.style.display = 'none';
                 }
             });
+            
+            // --- RAG EVENT LISTENERS (CORRIGIDOS) ---
+
+            ragUploadArea.addEventListener('click', () => ragFileInput.click());
+            ragUploadArea.addEventListener('dragover', (e) => { e.preventDefault(); ragUploadArea.style.borderColor = 'var(--primary-color)'; });
+            ragUploadArea.addEventListener('dragleave', () => { ragUploadArea.style.borderColor = 'var(--border-color)'; });
+            ragUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                ragUploadArea.style.borderColor = 'var(--border-color)';
+                if (e.dataTransfer.files.length) {
+                    ragFileInput.files = e.dataTransfer.files;
+                    updateRagFilesList();
+                }
+            });
+            ragFileInput.addEventListener('change', updateRagFilesList);
+
+            ragUploadBtn.addEventListener('click', async () => {
+                if (!apiConfig.url) {
+                    showError('URL da API não configurada.', 'rag-upload');
+                    return;
+                }
+                const file = ragFileInput.files[0];
+                if (!file) {
+                    showError('Por favor, selecione um arquivo para enviar.', 'rag-upload');
+                    return;
+                }
+
+                const formData = new FormData();
+                // CORREÇÃO: O backend espera o campo 'file', não 'files'.
+                formData.append('file', file);
+
+                // CORREÇÃO: O endpoint correto é '/rag/upload', sem a barra no final.
+                const endpoint = '/rag/upload';
+                const fullApiUrl = apiConfig.url + endpoint;
+
+                ragUploadBtn.disabled = true;
+                ragUploadLoading.style.display = 'block';
+                ragUploadErrorMessage.style.display = 'none';
+
+                try {
+                    const response = await fetch(fullApiUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `Erro no upload: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    // CORREÇÃO: O backend retorna 'message', não 'mensagem'.
+                    alert(result.message || 'Arquivo enviado com sucesso!');
+                    ragFileInput.value = ''; // Limpa o input
+                    updateRagFilesList();
+
+                } catch (error) {
+                    showError(`Erro ao enviar: ${error.message}`, 'rag-upload');
+                    console.error('Erro detalhado no upload do RAG:', error);
+                } finally {
+                    ragUploadBtn.disabled = false;
+                    ragUploadLoading.style.display = 'none';
+                }
+            });
+
+
+            ragSubmitBtn.addEventListener('click', async () => {
+                const pergunta = ragQuestionInput.value.trim();
+                if (!apiConfig.url) {
+                    showError('URL da API não configurada.', 'rag');
+                    return;
+                }
+                if (!pergunta) {
+                    showError('Por favor, digite uma pergunta.', 'rag');
+                    return;
+                }
+                
+                // CORREÇÃO: O endpoint correto é '/rag/query'.
+                const endpoint = '/rag/query'; 
+                const fullApiUrl = apiConfig.url + endpoint;
+
+                ragSubmitBtn.disabled = true;
+                ragLoading.style.display = 'block';
+                ragErrorMessage.style.display = 'none';
+                ragResultArea.innerHTML = `<div class="empty-state"><i>💡</i><p>Processando...</p></div>`;
+
+                try {
+                    const response = await fetch(fullApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        // CORREÇÃO: O backend espera o campo 'question', não 'pergunta'.
+                        body: JSON.stringify({ question: pergunta }) 
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `Erro na API: ${response.status}`);
+                    }
+
+                    const resultado = await response.json();
+                    // CORREÇÃO: O backend retorna 'answer', não 'resposta'.
+                    ragResultArea.textContent = resultado.answer || "Não foi possível obter uma resposta.";
+
+                } catch (error) {
+                    showError(`Erro ao processar: ${error.message}`, 'rag');
+                    console.error('Erro detalhado no RAG:', error);
+                    ragResultArea.innerHTML = `<div class="empty-state"><i>❌</i><p>Ocorreu um erro ao buscar a resposta.</p></div>`;
+                } finally {
+                    ragSubmitBtn.disabled = false;
+                    ragLoading.style.display = 'none';
+                }
+            });
+
 
             // --- INICIALIZAÇÃO ---
             carregarRedacoes();
