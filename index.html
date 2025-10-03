@@ -4,98 +4,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Corretor de Redação com IA</title>
+    <title>Cognita Suite</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div class="main-nav">
-        <div class="nav-tabs">
-            <button class="nav-tab active" data-view="redacao-view">Corretor de Redação</button>
-            <button class="nav-tab" data-view="rag-view">Tira-dúvidas (RAG)</button>
-        </div>
-        <div class="api-config">
-             <input type="text" id="api-url" placeholder="URL da API: http://127.0.0.1:8000">
-             <button id="save-api-config">Salvar</button>
+    <div id="splash-screen">
+        <div class="splash-content">
+            <h1 class="splash-title">cognita.</h1>
+            <p class="splash-subtitle">A suíte de IA para potencializar seus estudos.</p>
+            <button id="enter-app-btn" class="enter-btn">INICIAR</button>
         </div>
     </div>
 
-    <div id="redacao-view" class="app-view active">
-        <div class="container">
-            <div class="left-panel">
-                <h2>Minhas Redações</h2>
-                <div class="redacoes-container" id="redacoes-list"></div>
+    <div id="app-wrapper">
+        <header class="main-header">
+            <div class="logo">
+                <h1>cognita.</h1>
+                <span class="logo-modules">sinapse | grifo</span>
+            </div>
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-view="redacao-view">Grifo</button>
+                <button class="nav-tab" data-view="rag-view">Sinapse</button>
+            </nav>
+            <div class="api-config">
+                <input type="text" id="api-url" placeholder="URL da API: http://127.0.0.1:8000">
+                <button id="save-api-config">Salvar</button>
+            </div>
+        </header>
+
+        <main class="content-wrapper">
+            <div id="redacao-view" class="app-view active">
+                <div class="container">
+                    <div class="left-panel">
+                        <div class="panel-header">
+                            <h2>Minhas Redações (Grifo)</h2>
+                            <button id="toggle-sidebar-btn" class="panel-toggle-btn" title="Recolher Barra Lateral">‹</button>
+                        </div>
+                        <div class="redacoes-container" id="redacoes-list"></div>
+                    </div>
+
+                    <div class="center-panel">
+                        <div class="input-toggle">
+                            <button class="toggle-btn active" id="toggle-upload">Upload de Imagem</button>
+                            <button class="toggle-btn" id="toggle-text">Digitar Texto</button>
+                        </div>
+
+                        <div id="upload-container">
+                            <div class="upload-area" id="upload-area">
+                                <i id="upload-icon">📄</i>
+                                <h3 id="upload-title">Fazer upload de uma redação</h3>
+                                <p id="upload-text">Arraste um arquivo de imagem aqui ou clique para selecionar</p>
+                                <input type="file" id="file-input" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+
+                        <textarea id="text-input-area" placeholder="Cole ou digite sua redação aqui..."></textarea>
+
+                        <div class="options-bar">
+                            <div class="options-left">
+                                <select class="model-select" id="model-select">
+                                    <option value="enem">Redação ENEM</option>
+                                    <option value="ufsc">Redação UFSC</option>
+                                </select>
+                                <input type="text" id="ufsc-genre-input" placeholder="Gênero (ex: Conto)" style="display: none;">
+                            </div>
+                            <button class="submit-btn" id="submit-btn">Enviar para Correção</button>
+                        </div>
+
+                        <div class="loading" id="loading"><div class="spinner"></div><p>Analisando o tecido da realidade textual...</p></div>
+                        <div class="error-message" id="error-message"></div>
+
+                        <div class="result-area" id="result-area">
+                            <div class="panel-header">
+                                <h2 class="result-title">Resultado da Correção</h2>
+                                <button id="toggle-maximize-btn" class="panel-toggle-btn" title="Maximizar">⛶</button>
+                            </div>
+                            <div id="result-content">
+                                <div class="empty-state"><i>📝</i><p>Aguardando envio para análise...</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="center-panel">
-                <div class="input-toggle">
-                    <button class="toggle-btn active" id="toggle-upload">Upload de Imagem</button>
-                    <button class="toggle-btn" id="toggle-text">Digitar Texto</button>
-                </div>
-                
-                <div id="upload-container">
-                    <div class="upload-area" id="upload-area">
-                        <i id="upload-icon">📄</i>
-                        <h3 id="upload-title">Fazer upload de uma redação</h3>
-                        <p id="upload-text">Arraste um arquivo de imagem aqui ou clique para selecionar</p>
-                        <input type="file" id="file-input" accept="image/*" style="display: none;">
+            <div id="rag-view" class="app-view">
+                <div class="container" style="flex-direction: column; max-width: 900px; margin: 0 auto; padding: 20px;">
+                    <h1>Sinapse</h1>
+                    <p class="view-subtitle">A IA que dialoga com seus materiais de estudo.</p>
+
+                    <div class="upload-area" id="rag-upload-area">
+                        <i id="rag-upload-icon">📚</i>
+                        <h3 id="rag-upload-title">Adicionar Documento à Base de Conhecimento</h3>
+                        <p id="rag-upload-text">Arraste um arquivo (PDF, PPTX) aqui ou clique para selecionar</p>
+                        <input type="file" id="rag-file-input" style="display: none;" accept=".pdf,.pptx">
                     </div>
-                </div>
+                    <div id="rag-files-list"></div>
+                    <button class="submit-btn" id="rag-upload-btn" style="margin-bottom: 20px;">Enviar Arquivo</button>
+                    <div class="loading" id="rag-upload-loading"><div class="spinner"></div><p>Integrando conhecimento ao Sinapse...</p></div>
+                    <div class="error-message" id="rag-upload-error-message"></div>
 
-                <textarea id="text-input-area" placeholder="Cole ou digite sua redação aqui..."></textarea>
-                
-                <div class="options-bar">
-                    <div class="options-left">
-                        <select class="model-select" id="model-select">
-                            <option value="enem">Redação ENEM</option>
-                            <option value="ufsc">Redação UFSC</option>
-                        </select>
-                        <input type="text" id="ufsc-genre-input" placeholder="Gênero (ex: Conto)" style="display: none;">
-                    </div>
-                    <button class="submit-btn" id="submit-btn">Enviar para Correção</button>
-                </div>
+                    <hr class="divider">
 
-                <div class="loading" id="loading"><div class="spinner"></div><p>Corrigindo... Isso pode levar alguns segundos.</p></div>
-                <div class="error-message" id="error-message"></div>
+                    <p class="instruction-text">Faça uma pergunta sobre o documento enviado.</p>
+                    <textarea id="rag-question-input" placeholder="Digite sua pergunta aqui..."></textarea>
+                    <button class="submit-btn" id="rag-submit-btn" style="align-self: flex-end;">Enviar Pergunta</button>
 
-                <div class="result-area" id="result-area">
-                    <h2 class="result-title">Resultado da Correção</h2>
-                    <div id="result-content">
-                        <div class="empty-state"><i>📝</i><p>Envie uma redação para ver o resultado aqui.</p></div>
+                    <div class="loading" id="rag-loading"><div class="spinner"></div><p>Consultando a base de conhecimento...</p></div>
+                    <div class="error-message" id="rag-error-message"></div>
+
+                    <div class="result-area" id="rag-result-area">
+                        <div class="empty-state"><i>💡</i><p>A resposta para sua pergunta aparecerá aqui.</p></div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="rag-view" class="app-view">
-         <div class="container" style="flex-direction: column; max-width: 900px; margin: 0 auto; padding: 20px;">
-                <h1>Tira-dúvidas com RAG</h1>
-                
-                <div class="upload-area" id="rag-upload-area">
-                    <i id="rag-upload-icon">📚</i>
-                    <h3 id="rag-upload-title">Adicionar Documento à Base de Conhecimento</h3>
-                    <p id="rag-upload-text">Arraste um arquivo (PDF, PPTX) aqui ou clique para selecionar</p>
-                    <input type="file" id="rag-file-input" style="display: none;" accept=".pdf,.pptx">
-                </div>
-                <div id="rag-files-list"></div>
-                <button class="submit-btn" id="rag-upload-btn" style="margin-bottom: 20px;">Enviar Arquivo</button>
-                <div class="loading" id="rag-upload-loading"><div class="spinner"></div><p>Enviando arquivo...</p></div>
-                <div class="error-message" id="rag-upload-error-message"></div>
-
-                <hr style="width:100%; border:0; border-top:1px solid var(--border-color); margin: 20px 0;">
-
-                <p style="text-align: center; margin-bottom: 15px;">Faça uma pergunta sobre o documento enviado.</p>
-                <textarea id="rag-question-input" placeholder="Digite sua pergunta aqui..."></textarea>
-                <button class="submit-btn" id="rag-submit-btn" style="align-self: flex-end;">Enviar Pergunta</button>
-                
-                <div class="loading" id="rag-loading"><div class="spinner"></div><p>Processando sua pergunta...</p></div>
-                <div class="error-message" id="rag-error-message"></div>
-                
-                <div class="result-area" id="rag-result-area">
-                    <div class="empty-state"><i>💡</i><p>A resposta para sua pergunta aparecerá aqui.</p></div>
-                </div>
-         </div>
+        </main>
     </div>
 
     <script src="script.js"></script>
